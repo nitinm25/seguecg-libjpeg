@@ -99,7 +99,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 		cmake -S ../ -B ../build_nosimd_wasm_$(BUILD_TYPE_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE_CONFIG) -DENABLE_SHARED=0 -DWITH_SIMD=0
 	cd ../build_nosimd_wasm_$(BUILD_TYPE_DIR) && make -j$(PARALLEL_COUNT)
 	$(WASI_CC) $(BUILD_TYPE_FLAGS) $(WASI_CFLAGS) $(WASI_LDFLAGS) -o ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm $(RLBOX_WASM2C_PATH)/c_src/wasm2c_sandbox_wrapper.c $(LIBJPEG_NOSIMD_WASM_LINK)
-	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm -o ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
+	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm -n libjpeg -o ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 
 ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c: $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c image_change_quality.c test_bytes.h
 	CC="$(WASI_CC)" CFLAGS="$(WASI_CFLAGS)" LDFLAGS="$(WASI_SA_LDFLAGS)" \
@@ -108,7 +108,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 		cmake -S ../ -B ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE_CONFIG) -DENABLE_SHARED=0 -DWITH_SIMD=0
 	cd ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR) && make -j$(PARALLEL_COUNT)
 	$(WASI_CC) $(BUILD_TYPE_FLAGS) $(WASI_CFLAGS) $(WASI_SA_LDFLAGS) -o ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm image_change_quality.c $(LIBJPEG_NOSIMD_WASM_SA_INCLUDES) $(LIBJPEG_NOSIMD_WASM_SA_LINK)
-	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -o ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
+	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -n libjpeg -o ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 
 ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c: $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c image_change_quality.c test_bytes.h
 	CC="$(WASI_CC)" CFLAGS="$(WASI_CFLAGS) $(SIMDE_CFLAGS)" LDFLAGS="$(WASI_SA_LDFLAGS)" \
@@ -117,7 +117,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 		cmake -S ../ -B ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE_CONFIG) -DENABLE_SHARED=0 -DWITH_SIMD=1 -DREQUIRE_SIMD=1 -DNEON_INTRINSICS=1 -DCPU_TYPE="arm" -DIS_WASM_BUILD=1
 	cd ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR) && make -j$(PARALLEL_COUNT)
 	$(WASI_CC) $(BUILD_TYPE_FLAGS) $(WASI_CFLAGS) $(WASI_SA_LDFLAGS) -o ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm image_change_quality.c $(LIBJPEG_ARM32SIMD_WASM_SA_INCLUDES) $(LIBJPEG_ARM32SIMD_WASM_SA_LINK)
-	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -o ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
+	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -n libjpeg -o ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 
 ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c: $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c image_change_quality.c test_bytes.h
 	CC="$(WASI_CC)" CFLAGS="$(WASI_CFLAGS) $(SIMDE_CFLAGS)" LDFLAGS="$(WASI_SA_LDFLAGS)" \
@@ -126,7 +126,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 		cmake -S ../ -B ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE_CONFIG) -DENABLE_SHARED=0 -DWITH_SIMD=1 -DREQUIRE_SIMD=1 -DNEON_INTRINSICS=1 -DCPU_TYPE="arm64" -DIS_WASM_BUILD=1
 	cd ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR) && make -j$(PARALLEL_COUNT)
 	$(WASI_CC) $(BUILD_TYPE_FLAGS) $(WASI_CFLAGS) $(WASI_SA_LDFLAGS) -o ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm image_change_quality.c $(LIBJPEG_ARM64SIMD_WASM_SA_INCLUDES) $(LIBJPEG_ARM64SIMD_WASM_SA_LINK)
-	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -o ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
+	$(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm -n libjpeg -o ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 
 #####################################
 
