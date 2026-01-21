@@ -4,6 +4,7 @@ multi_exec() {
     echo "[$1]:"
     for ((i=1; i<=ITERATIONS; i++)); do
         ./"$2"
+        sleep 5
     done
     echo ""
 }
@@ -14,6 +15,8 @@ multi_exec_socket() {
         ./${IPC_SOCKET_SERVER} &
         sleep 1
         ./${IPC_SOCKET_CLIENT}
+
+        sleep 5
     done
     echo ""
 }
