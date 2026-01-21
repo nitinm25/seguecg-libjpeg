@@ -9,7 +9,7 @@ void process_read_jpeg(int client_fd) {
     // Receive input data
     unsigned char* input_buffer = (unsigned char*)malloc(input_size);
     ssize_t received = socket_recv(client_fd, input_buffer, input_size);
-    printf("[Server] Recv: %zd bytes\n", received);
+    // printf("[Server] Recv: %zd bytes\n", received);
 
     // Process
     struct jpeg_parsed_data in_jpeg_data = read_jpeg(input_buffer, input_size);
@@ -24,7 +24,7 @@ void process_read_jpeg(int client_fd) {
 
     // Send response
     ssize_t sent = socket_send(client_fd, in_jpeg_data.image_buffer, in_jpeg_data.image_buffer_size);
-    printf("[Server] Sent: %zd bytes\n", sent);
+    // printf("[Server] Sent: %zd bytes\n", sent);
 
     free(in_jpeg_data.image_buffer);
 }
@@ -44,7 +44,7 @@ void process_write_jpeg(int client_fd) {
     // Receive input data
     in_jpeg_data.image_buffer = (JSAMPLE*)malloc(in_jpeg_data.image_buffer_size);
     ssize_t received = socket_recv(client_fd, in_jpeg_data.image_buffer, in_jpeg_data.image_buffer_size);
-    printf("[Server] Recv: %zd bytes\n", received);
+    // printf("[Server] Recv: %zd bytes\n", received);
 
     // Process
     struct jpeg_parsed_data out_jpeg_data = write_jpeg(quality, in_jpeg_data);
@@ -58,7 +58,7 @@ void process_write_jpeg(int client_fd) {
 
     // Send response
     ssize_t sent = socket_send(client_fd, out_jpeg_data.image_buffer, out_jpeg_data.image_buffer_size);
-    printf("[Server] Sent: %zd bytes\n", sent);
+    // printf("[Server] Sent: %zd bytes\n", sent);
 
     free(in_jpeg_data.image_buffer);
     free(out_jpeg_data.image_buffer);
@@ -69,10 +69,11 @@ int main() {
     int client_fd = accept(server_fd, NULL, NULL);  // Accept single connection
     if (client_fd < 0) {perror("accept");}
 
-    process_read_jpeg(client_fd);
+    for (int i = 0; i < TEST_ITERATIONS; i++) {
+        process_read_jpeg(client_fd);
+        process_write_jpeg(client_fd);
+    }
 
-    process_write_jpeg(client_fd);
-    
     close(client_fd);
     close(server_fd);
     unlink(SOCKET_PATH);
