@@ -138,6 +138,14 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 
 #####################################
 
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server: image_change_quality_socket_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
+
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_client: image_change_quality_socket_client.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
+
+#####################################
+
 ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasm2c_guardpage: image_change_quality.c test_bytes.h  $(REPO_PATH)/benchmark/wasm-rt-static-runner.c ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 	$(CC) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $(WASM2C_SA_RUNTIME) $(REPO_PATH)/benchmark/wasm-rt-static-runner.c ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/libjpeg.wasm.c $(WASM2C_NOSIMD_SA_BUILD_INCLUDES) $(RLBOX_INCLUDES) -DWASM_RT_MEMCHECK_GUARD_PAGES=1
 
@@ -376,8 +384,13 @@ build: test_bytes.h
 build: ../build_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_noop
 build: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_noop
 build: ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_wasm2c
+
 build: ../build_$(BUILD_TYPE_DIR)/image_change_quality
 build: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality
+
+build: ../build_nosimd_ipc_$(BUILD_TYPE_DIR)/image_change_quality_socket_server
+build: ../build_nosimd_ipc_$(BUILD_TYPE_DIR)/image_change_quality_socket_client
+
 build: ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasmtime_guardpage.cwasm
 build: ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasmtime_boundscheck.cwasm
 build: ../build_nosimd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasmtime_boundscheck_spectre.cwasm
@@ -461,6 +474,16 @@ build_simdtest: ../build_$(BUILD_TYPE_DIR)/image_change_quality
 build_simdtest: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality
 build_simdtest: ../build_arm32simd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasm2c_guardpage
 build_simdtest: ../build_arm64simd_wasm_sa_$(BUILD_TYPE_DIR)/image_change_quality_wasm2c_guardpage
+
+build_ipc_benchmark: test_bytes.h
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_noop
+build_ipc_benchmark: ../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c
+build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage
+build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck
+build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_server
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
 
 test_rlbox:
 	cd $(REPO_PATH)/build_$(BUILD_TYPE_DIR) && echo -n "Stock " && ./image_change_quality_rlbox_noop
