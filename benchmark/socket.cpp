@@ -6,7 +6,7 @@
 #include <sys/un.h>
 
 #define SOCKET_PATH "/tmp/domain_socket.sock"
-#define TEST_ITERATIONS 10
+#define TEST_ITERATIONS 100
 
 
 int socket_send(int client_fd, const unsigned char* data, size_t size) {
