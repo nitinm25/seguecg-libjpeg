@@ -60,7 +60,7 @@ int socket_setup_client() {
         return 1;
     }
     
-    printf("Connected to server\n");
+    // printf("Connected to server\n");
 
     return client_fd;
 }
@@ -94,7 +94,7 @@ int socket_setup_server() {
         return 1;
     }
     
-    printf("Server listening on %s\n", SOCKET_PATH);
+    // printf("Server listening on %s\n", SOCKET_PATH);
 
     return server_fd;
 }

@@ -1,42 +1,47 @@
-ITERATIONS=${1:-1}  # Get iterations from first argument, default to 1
+ITERATIONS=${1:-1}  # Iteration count
+
+multi_exec() {    
+    echo "[$1]:"
+    for ((i=1; i<=ITERATIONS; i++)); do
+        ./"$2"
+    done
+    echo ""
+}
+
+multi_exec_socket() {    
+    echo "[ipc_socket]:"
+    for ((i=1; i<=ITERATIONS; i++)); do
+        ./${IPC_SOCKET_SERVER} &
+        sleep 1
+        ./${IPC_SOCKET_CLIENT}
+    done
+    echo ""
+}
 
 BASIC_NOSIMD='../build_nosimd_release/image_change_quality'
-
 RLBOX_NOOP='../build_nosimd_release/image_change_quality_rlbox_noop'
 RLBOX_WASM2C='../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c'
-
 SA_WASM2C_GUARDPAGE='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage'
 SA_WASM2C_BOUNDSCHECK='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck'
 SA_WASM2C_WATCH='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch'
-
 IPC_SOCKET_SERVER='../build_nosimd_release/image_change_quality_socket_server'
 IPC_SOCKET_CLIENT='../build_nosimd_release/image_change_quality_socket_client'
 
-make build_ipc_benchmark
+# Build
+make build_ipc_benchmark > /dev/null
+# make build_ipc_benchmark_minimal > /dev/null
 
-# build_and_run() {
-#     # make "$2" > /dev/null
-    
-#     echo "[$1]:"
-#     for ((i=1; i<=ITERATIONS; i++)); do
-#         ./"$2"
-#     done
-#     echo ""
-# }
+# # Basic
+multi_exec "basic_nosimd" "$BASIC_NOSIMD"
 
+# RLBox 
+multi_exec "rlbox_noop" "$RLBOX_NOOP"
+multi_exec "rlbox_wasm2c" "$RLBOX_WASM2C"
 
-# # # Basic
-# build_and_run "basic_nosimd" "$BASIC_NOSIMD"
+# wasm2c standalone
+multi_exec "sa_wasm2c_guardpage" "$SA_WASM2C_GUARDPAGE"
+multi_exec "sa_wasm2c_boundscheck" "$SA_WASM2C_BOUNDSCHECK"
+multi_exec "sa_wasm2c_watch" "$SA_WASM2C_WATCH"
 
-# # RLBox 
-# build_and_run "rlbox_noop" "$RLBOX_NOOP"
-# build_and_run "rlbox_wasm2c" "$RLBOX_WASM2C"
-
-# # wasm2c standalone
-# build_and_run "sa_wasm2c_guardpage" "$SA_WASM2C_GUARDPAGE"
-# build_and_run "sa_wasm2c_boundscheck" "$SA_WASM2C_BOUNDSCHECK"
-# build_and_run "sa_wasm2c_watch" "$SA_WASM2C_WATCH"
-
-./${IPC_SOCKET_SERVER} &
-sleep 1
-./${IPC_SOCKET_CLIENT}
+# IPC socket
+multi_exec_socket
