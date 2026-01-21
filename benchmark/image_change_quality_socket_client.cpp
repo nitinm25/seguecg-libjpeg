@@ -1,8 +1,11 @@
+#include <time.h>
+
 #include "socket.cpp"
 #include "libjpeg_utils.cpp"
 
 #include "test_bytes.h"
 #define INPUT_SIZE (sizeof(inputData) - 1)
+#define OUTPUT_SIZE (sizeof(outputData) - 1)
 
 
 void ipc_read_jpeg(int server_fd, struct jpeg_parsed_data& in_jpeg_data) {
@@ -55,15 +58,55 @@ void ipc_write_jpeg(int server_fd, int quality, struct jpeg_parsed_data& in_jpeg
 
 int main() {
     int server_fd = socket_setup_client();    
-    
+
+    // Warmup
+    struct timespec warmup_time = { 0 };
+    for(int i = 0; i < 10; i++) {
+        clock_gettime(CLOCK_REALTIME, &warmup_time);
+        if(warmup_time.tv_nsec == 0 && warmup_time.tv_sec == 0) {
+            printf("Clock not working\n");
+            exit(1);
+        }
+    }
+
+    struct timespec enter_time = { 0 };
+    clock_gettime(CLOCK_REALTIME, &enter_time);
+
+    ////////// libjpeg calls //////////
+
     struct jpeg_parsed_data in_jpeg_data = {0};
-    ipc_read_jpeg(server_fd, in_jpeg_data);
-
-    printf("\n");
-
     struct jpeg_parsed_data out_jpeg_data = {0};
+
+    ipc_read_jpeg(server_fd, in_jpeg_data);
     ipc_write_jpeg(server_fd, 30, in_jpeg_data, out_jpeg_data);
+
+    ///////////////////////////////////
+
+    struct timespec exit_time = { 0 };
+    clock_gettime(CLOCK_REALTIME, &exit_time);
     
+    // Validation
+    RELEASE_ASSERT(OUTPUT_SIZE == out_jpeg_data.image_buffer_size, "Size mismatch");
+
+    for(unsigned long i = 0; i < OUTPUT_SIZE; i++) {
+        if (out_jpeg_data.image_buffer[i] != outputData[i]) {
+            printf("Output data doesn't match at index: %lu!\n", i);
+            exit(1);
+        }
+    }
+
+    const int64_t nanos = 1000000000;
+    int64_t ns =  (nanos * (exit_time.tv_sec - enter_time.tv_sec)) + ((int64_t)(exit_time.tv_nsec - enter_time.tv_nsec));
+
+    printf("JPEG recoding time: %lld\n", (long long) (ns / 1));
+
+
+    if (in_jpeg_data.image_buffer) {
+        free(in_jpeg_data.image_buffer);
+    }
+    if (out_jpeg_data.image_buffer) {
+        free(out_jpeg_data.image_buffer);
+    }
     close(server_fd);
     
     return 0;

@@ -25,6 +25,8 @@ void process_read_jpeg(int client_fd) {
     // Send response
     ssize_t sent = socket_send(client_fd, in_jpeg_data.image_buffer, in_jpeg_data.image_buffer_size);
     printf("[Server] Sent: %zd bytes\n", sent);
+
+    free(in_jpeg_data.image_buffer);
 }
 
 void process_write_jpeg(int client_fd) {
@@ -57,6 +59,9 @@ void process_write_jpeg(int client_fd) {
     // Send response
     ssize_t sent = socket_send(client_fd, out_jpeg_data.image_buffer, out_jpeg_data.image_buffer_size);
     printf("[Server] Sent: %zd bytes\n", sent);
+
+    free(in_jpeg_data.image_buffer);
+    free(out_jpeg_data.image_buffer);
 }
 
 int main() {
