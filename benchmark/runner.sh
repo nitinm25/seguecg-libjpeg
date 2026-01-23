@@ -12,9 +12,9 @@ multi_exec() {
 multi_exec_socket() {    
     echo "[ipc_socket]:"
     for ((i=1; i<=ITERATIONS; i++)); do
-        ./${IPC_SOCKET_SERVER} &
+        ./"$1" &
         sleep 1
-        ./${IPC_SOCKET_CLIENT}
+        ./"$2"
 
         sleep 5
     done
@@ -27,10 +27,13 @@ RLBOX_WASM2C='../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c'
 SA_WASM2C_GUARDPAGE='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage'
 SA_WASM2C_BOUNDSCHECK='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck'
 SA_WASM2C_WATCH='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch'
-IPC_SOCKET_SERVER='../build_nosimd_release/image_change_quality_socket_coarse_server'
-IPC_SOCKET_CLIENT='../build_nosimd_release/image_change_quality_socket_coarse_client'
+IPC_SOCKET_COARSE_SERVER='../build_nosimd_release/image_change_quality_socket_coarse_server'
+IPC_SOCKET_COARSE_CLIENT='../build_nosimd_release/image_change_quality_socket_coarse_client'
+IPC_SOCKET_SERVER='../build_nosimd_release/image_change_quality_socket_server'
+IPC_SOCKET_CLIENT='../build_nosimd_release/image_change_quality_socket_client'
 
 # Build
+# make clean
 # make build_ipc_benchmark > /dev/null
 make build_ipc_benchmark_minimal > /dev/null
 
@@ -47,4 +50,6 @@ make build_ipc_benchmark_minimal > /dev/null
 # multi_exec "sa_wasm2c_watch" "$SA_WASM2C_WATCH"
 
 # IPC socket
-multi_exec_socket
+# multi_exec_socket "$IPC_SOCKET_COARSE_SERVER" "$IPC_SOCKET_COARSE_CLIENT"
+
+multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"

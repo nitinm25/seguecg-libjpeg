@@ -5,3 +5,5 @@ benchmark/rlbox_wasm2c_sandbox
 benchmark/wasm2c_sandbox_compiler
 benchmark/generate_test_out
 benchmark/test_out.jpeg
+
+dlmalloc.c
