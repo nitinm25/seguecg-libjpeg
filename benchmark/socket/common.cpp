@@ -1,7 +1,9 @@
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <iostream>
+#include <cstdint>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 #define SHARED_MEM_NAME "/libjpeg_shm"
 #define SHARED_MEM_BASE 0x700000000000UL
@@ -10,6 +12,14 @@
 #define USE_DL_PREFIX 1  // Prefix functions with dl_
 #define MSPACES 1        // Enable mspace API
 #include "dlmalloc.c"
+
+
+enum IPCCommand : uint32_t {
+    IPC_JPEG_STD_ERROR = 0,
+    IPC_JPEG_CREATE_DECOMPRESS = 1,
+
+    IPC_TERMINATE = 16
+};
 
 
 mspace shared_memory_setup(int &shm_fd, void* &shm_ptr, bool create_shm) {
