@@ -12,6 +12,17 @@ void handle_ipc_jpeg_std_error(int client_fd) {
     socket_send(client_fd, (unsigned char*)&result, sizeof(result));
 }
 
+void handle_ipc_jpeg_create_decompress(int client_fd) {
+    j_decompress_ptr cinfo;
+    socket_recv(client_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+    
+    jpeg_create_decompress(cinfo);
+    
+    // No return value, just send ACK
+    uint32_t ack = 1;
+    socket_send(client_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
 void server_run(int client_fd) {
     // Server loop
     while(true) {
@@ -22,6 +33,10 @@ void server_run(int client_fd) {
             case IPC_JPEG_STD_ERROR:
                 handle_ipc_jpeg_std_error(client_fd);
                 std::cout << "JPEG STD ERRROR HANDLER" << std::endl;
+                break;
+            case IPC_JPEG_CREATE_DECOMPRESS:
+                handle_ipc_jpeg_create_decompress(client_fd);
+                std::cout << "JPEG CREATE DECOMPRESS" << std::endl;
                 break;
             case IPC_TERMINATE:
                 std::cout << "JPEG TERMINATE" << std::endl;

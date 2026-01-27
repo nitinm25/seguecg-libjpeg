@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common.cpp"
+#include "socket.cpp"
 #include "jpeglib.h"
 
 #define RELEASE_ASSERT(cond, msg)           \
@@ -12,14 +14,14 @@
   }
 
 void my_error_exit (j_common_ptr cinfo) {
-  RELEASE_ASSERT(false, "my_error_exit exit handler called");
+    RELEASE_ASSERT(false, "my_error_exit exit handler called");
 }
 
 struct jpeg_parsed_data {
-  JSAMPLE* image_buffer;
-  size_t image_buffer_size;
-  int image_height;
-  int image_width;
+    JSAMPLE* image_buffer;
+    size_t image_buffer_size;
+    int image_height;
+    int image_width;
 };
 
 
@@ -42,8 +44,8 @@ void ipc_jpeg_create_decompress(int server_fd, j_decompress_ptr cinfo) {
 
     socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
 
-    jpeg_error_mgr* result;
-    socket_recv(server_fd, (unsigned char*)&result, sizeof(result));
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
 }
 
 
@@ -65,7 +67,7 @@ struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned ch
     cinfo->err = ipc_jpeg_std_error(server_fd, jerr);
     jerr->error_exit = my_error_exit;
 
-
+    ipc_jpeg_create_decompress(server_fd, cinfo);
 
     return ret;
 }

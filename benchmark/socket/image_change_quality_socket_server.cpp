@@ -12,7 +12,6 @@ int main() {
     if (client_fd < 0) {perror("accept");}
 
     server_run(client_fd);
-
     std::cout << "Server terminating" << std::endl;
 
     // Cleanup
@@ -24,9 +23,3 @@ int main() {
 
     return 0;
 }
-
-// Shared memory test
-// char* client_buffer;
-// socket_recv(client_fd, (unsigned char*)&client_buffer, sizeof(client_buffer));
-// strcat(client_buffer, " - modified by server");
-// socket_send(client_fd, (const unsigned char*)"Modified!", 10);

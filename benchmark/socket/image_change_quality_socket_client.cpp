@@ -1,5 +1,3 @@
-#include "common.cpp"
-#include "socket.cpp"
 #include "libjpeg_client.cpp"
 
 #include "../test_bytes.h"
@@ -21,9 +19,9 @@ int main() {
 
     in_jpeg_data = read_jpeg(server_fd, shared_heap, inputData, input_size);
 
-    ipc_terminate(server_fd);
-
     //////////////////////////////
+
+    ipc_terminate(server_fd);
 
     // Cleanup
     close(server_fd);
@@ -32,13 +30,3 @@ int main() {
     
     return 0;
 }
-
-// Shared memory test
-// char* shared_data = (char*)mspace_malloc(shared_heap, 256);
-// strcpy(shared_data, "Client allocated this!");
-// std::cout << "[Client] Buffer content: " << shared_data << std::endl;
-// socket_send(server_fd, (unsigned char*)&shared_data, sizeof(shared_data));
-// char response[256];
-// socket_recv(server_fd, (unsigned char*)response, sizeof(response));
-// std::cout << "[Client] Buffer content: " << shared_data << std::endl;
-// mspace_free(shared_heap, shared_data);
