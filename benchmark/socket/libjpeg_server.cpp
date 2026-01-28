@@ -205,23 +205,23 @@ void server_run(int client_fd) {
         switch(cmd) {
             case IPC_JPEG_STD_ERROR:
                 handle_ipc_jpeg_std_error(client_fd);
-                std::cout << "JPEG STD ERRROR HANDLER" << std::endl;
+                // std::cout << "JPEG STD ERRROR HANDLER" << std::endl;
                 break;
             case IPC_JPEG_CREATE_DECOMPRESS:
                 handle_ipc_jpeg_create_decompress(client_fd);
-                std::cout << "JPEG CREATE DECOMPRESS" << std::endl;
+                // std::cout << "JPEG CREATE DECOMPRESS" << std::endl;
                 break;
             case IPC_JPEG_MEM_SRC:
                 handle_ipc_jpeg_mem_src(client_fd);
-                std::cout << "JPEG MEM SRC" << std::endl;
+                // std::cout << "JPEG MEM SRC" << std::endl;
                 break;
             case IPC_JPEG_READ_HEADER:
                 handle_ipc_jpeg_read_header(client_fd);
-                std::cout << "JPEG READ HEADER" << std::endl;
+                // std::cout << "JPEG READ HEADER" << std::endl;
                 break;
             case IPC_JPEG_START_DECOMPRESS:
                 handle_ipc_jpeg_start_decompress(client_fd);
-                std::cout << "JPEG START DECOMPRESS" << std::endl;
+                // std::cout << "JPEG START DECOMPRESS" << std::endl;
                 break;
             case IPC_JPEG_READ_SCANLINES:
                 handle_ipc_jpeg_read_scanlines(client_fd);
@@ -229,31 +229,31 @@ void server_run(int client_fd) {
                 break;
             case IPC_JPEG_FINISH_DECOMPRESS:
                 handle_ipc_jpeg_finish_decompress(client_fd);
-                std::cout << "JPEG FINISH DECOMPRESS" << std::endl;
+                // std::cout << "JPEG FINISH DECOMPRESS" << std::endl;
                 break;
             case IPC_JPEG_DESTROY_DECOMPRESS:
                 handle_ipc_jpeg_destroy_decompress(client_fd);
-                std::cout << "JPEG DESTROY DECOMPRESS" << std::endl;
+                // std::cout << "JPEG DESTROY DECOMPRESS" << std::endl;
                 break;
             case IPC_JPEG_CREATE_COMPRESS:
                 handle_ipc_jpeg_create_compress(client_fd);
-                std::cout << "JPEG CREATE COMPRESS" << std::endl;
+                // std::cout << "JPEG CREATE COMPRESS" << std::endl;
                 break;
             case IPC_JPEG_MEM_DEST:
                 handle_ipc_jpeg_mem_dest(client_fd);
-                std::cout << "JPEG MEM DEST" << std::endl;
+                // std::cout << "JPEG MEM DEST" << std::endl;
                 break;
             case IPC_JPEG_SET_DEFAULTS:
                 handle_ipc_jpeg_set_defaults(client_fd);
-                std::cout << "JPEG SET DEFAULTS" << std::endl;
+                // std::cout << "JPEG SET DEFAULTS" << std::endl;
                 break;
             case IPC_JPEG_SET_QUALITY:
                 handle_ipc_jpeg_set_quality(client_fd);
-                std::cout << "JPEG SET QUALITY" << std::endl;
+                // std::cout << "JPEG SET QUALITY" << std::endl;
                 break;
             case IPC_JPEG_START_COMPRESS:
                 handle_ipc_jpeg_start_compress(client_fd);
-                std::cout << "JPEG START COMPRESS" << std::endl;
+                // std::cout << "JPEG START COMPRESS" << std::endl;
                 break;
             case IPC_JPEG_WRITE_SCANLINES:
                 handle_ipc_jpeg_write_scanlines(client_fd);
@@ -261,14 +261,14 @@ void server_run(int client_fd) {
                 break;
             case IPC_JPEG_FINISH_COMPRESS:
                 handle_ipc_jpeg_finish_compress(client_fd);
-                std::cout << "JPEG FINISH COMPRESS" << std::endl;
+                // std::cout << "JPEG FINISH COMPRESS" << std::endl;
                 break;
             case IPC_JPEG_DESTROY_COMPRESS:
                 handle_ipc_jpeg_destroy_compress(client_fd);
-                std::cout << "JPEG DESTROY COMPRESS" << std::endl;
+                // std::cout << "JPEG DESTROY COMPRESS" << std::endl;
                 break;
             case IPC_TERMINATE:
-                std::cout << "[JPEG TERMINATE] IPC count: " << ipc_counter << std::endl;
+                // std::cout << "[JPEG TERMINATE] IPC count: " << ipc_counter << std::endl;
                 return;
         }
     }

@@ -12,7 +12,7 @@ int main() {
     if (client_fd < 0) {perror("accept");}
 
     server_run(client_fd);
-    std::cout << "Server terminating" << std::endl;
+    // std::cout << "Server terminating" << std::endl;
 
     // Cleanup
     munmap(shm_ptr, SHARED_MEM_SIZE);
