@@ -18,8 +18,18 @@ int main() {
     struct jpeg_parsed_data out_jpeg_data = {0};
 
     in_jpeg_data = read_jpeg(server_fd, shared_heap, inputData, input_size);
-
+    out_jpeg_data = write_jpeg(server_fd, shared_heap, 30, in_jpeg_data);
+    
     //////////////////////////////
+    
+    // Validation
+    // RELEASE_ASSERT(output_size == out_jpeg_data.image_buffer_size, "Size mismatch");
+    // for(unsigned long i = 0; i < output_size; i++) {
+    //     if (out_jpeg_data.image_buffer[i] != outputData[i]) {
+    //     printf("Output data doesn't match at index: %lu!\n", i);
+    //     exit(1);
+    //     }
+    // }
 
     ipc_terminate(server_fd);
 

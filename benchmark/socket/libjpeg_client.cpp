@@ -113,11 +113,98 @@ void ipc_jpeg_destroy_decompress(int server_fd, j_decompress_ptr cinfo) {
     socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
 }
 
+void ipc_jpeg_create_compress(int server_fd, j_compress_ptr cinfo) {
+    uint32_t ipc_call_num = IPC_JPEG_CREATE_COMPRESS;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+void ipc_jpeg_mem_dest(int server_fd, j_compress_ptr cinfo, unsigned char** outbuffer, unsigned long* outsize) {
+    uint32_t ipc_call_num = IPC_JPEG_MEM_DEST;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+    socket_send(server_fd, (unsigned char*)&outbuffer, sizeof(outbuffer));
+    socket_send(server_fd, (unsigned char*)&outsize, sizeof(outsize));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+void ipc_jpeg_set_defaults(int server_fd, j_compress_ptr cinfo) {
+    uint32_t ipc_call_num = IPC_JPEG_SET_DEFAULTS;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+void ipc_jpeg_set_quality(int server_fd, j_compress_ptr cinfo, int quality, boolean force_baseline) {
+    uint32_t ipc_call_num = IPC_JPEG_SET_QUALITY;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+    socket_send(server_fd, (unsigned char*)&quality, sizeof(quality));
+    socket_send(server_fd, (unsigned char*)&force_baseline, sizeof(force_baseline));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+void ipc_jpeg_start_compress(int server_fd, j_compress_ptr cinfo, boolean write_all_tables) {
+    uint32_t ipc_call_num = IPC_JPEG_START_COMPRESS;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+    socket_send(server_fd, (unsigned char*)&write_all_tables, sizeof(write_all_tables));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+JDIMENSION ipc_jpeg_write_scanlines(int server_fd, j_compress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION num_lines) {
+    uint32_t ipc_call_num = IPC_JPEG_WRITE_SCANLINES;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+    socket_send(server_fd, (unsigned char*)&scanlines, sizeof(scanlines));
+    socket_send(server_fd, (unsigned char*)&num_lines, sizeof(num_lines));
+
+    JDIMENSION result;
+    socket_recv(server_fd, (unsigned char*)&result, sizeof(result));
+    return result;
+}
+
+void ipc_jpeg_finish_compress(int server_fd, j_compress_ptr cinfo) {
+    uint32_t ipc_call_num = IPC_JPEG_FINISH_COMPRESS;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
+void ipc_jpeg_destroy_compress(int server_fd, j_compress_ptr cinfo) {
+    uint32_t ipc_call_num = IPC_JPEG_DESTROY_COMPRESS;
+    socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
+
+    socket_send(server_fd, (unsigned char*)&cinfo, sizeof(cinfo));
+
+    uint32_t ack;
+    socket_recv(server_fd, (unsigned char*)&ack, sizeof(ack));
+}
+
 void ipc_terminate(int server_fd) {
     uint32_t ipc_call_num = IPC_TERMINATE;
     socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
 }
-
 
 struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned char *fileBuff, unsigned long fsize) {
     // Libjpeg uses a pointer to the input buffer, copy to shared memory so it's accessible on the server
@@ -164,6 +251,55 @@ struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned ch
 
     ipc_jpeg_finish_decompress(server_fd, cinfo);
     ipc_jpeg_destroy_decompress(server_fd, cinfo);
+
+    return ret;
+}
+
+struct jpeg_parsed_data write_jpeg(int server_fd, mspace shared_heap, int quality, struct jpeg_parsed_data input) {
+    struct jpeg_parsed_data ret = {0};
+
+    struct jpeg_compress_struct* cinfo = (struct jpeg_compress_struct*)mspace_malloc(shared_heap, sizeof(struct jpeg_compress_struct));
+    memset(cinfo, 0, sizeof(struct jpeg_compress_struct));
+
+    struct jpeg_error_mgr* jerr = (struct jpeg_error_mgr*)mspace_malloc(shared_heap, sizeof(struct jpeg_error_mgr));
+    memset(jerr, 0, sizeof(struct jpeg_error_mgr));
+
+    cinfo->err = ipc_jpeg_std_error(server_fd, jerr);
+    ipc_jpeg_create_compress(server_fd, cinfo);
+
+    unsigned char** outbuffer_ptr = (unsigned char**)mspace_malloc(shared_heap, sizeof(unsigned char*));
+    unsigned long* outsize_ptr = (unsigned long*)mspace_malloc(shared_heap, sizeof(unsigned long));
+    *outbuffer_ptr = NULL;
+    *outsize_ptr = 0;
+
+    ipc_jpeg_mem_dest(server_fd, cinfo, outbuffer_ptr, outsize_ptr);
+
+    cinfo->image_width = input.image_width;
+    cinfo->image_height = input.image_height;
+    cinfo->input_components = 3;
+    cinfo->in_color_space = JCS_RGB;
+
+    ipc_jpeg_set_defaults(server_fd, cinfo);
+    ipc_jpeg_set_quality(server_fd, cinfo, quality, TRUE);
+    ipc_jpeg_start_compress(server_fd, cinfo, TRUE);
+
+    // Allocate row pointer in shared memory
+    JSAMPLE** row_pointer = (JSAMPLE**)mspace_malloc(shared_heap, sizeof(JSAMPLE*));
+    int row_stride = input.image_width * 3;
+
+    while (cinfo->next_scanline < cinfo->image_height) {
+        *row_pointer = &input.image_buffer[cinfo->next_scanline * row_stride];
+        ipc_jpeg_write_scanlines(server_fd, cinfo, row_pointer, 1);
+    }
+
+    ipc_jpeg_finish_compress(server_fd, cinfo);
+
+    ret.image_width = cinfo->image_width;
+    ret.image_height = cinfo->image_height;
+    ret.image_buffer_size = *outsize_ptr;
+    ret.image_buffer = *outbuffer_ptr;
+
+    ipc_jpeg_destroy_compress(server_fd, cinfo);
 
     return ret;
 }
