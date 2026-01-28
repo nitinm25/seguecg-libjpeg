@@ -47,7 +47,7 @@ int main() {
     }
 
     int64_t ns = duration_cast<nanoseconds>(exit_time - enter_time).count();
-    printf("JPEG recoding time: %lld\n", (long long) (ns / TEST_ITERATIONS));
+    printf("IPC JPEG recoding time: %lld\n", (long long) (ns / TEST_ITERATIONS));
 
     // Cleanup
     close(server_fd);

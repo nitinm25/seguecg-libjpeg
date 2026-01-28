@@ -138,12 +138,6 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 
 #####################################
 
-../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_coarse_server: socket_coarse_grained/image_change_quality_socket_coarse_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
-	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
-
-../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_coarse_client: socket_coarse_grained/image_change_quality_socket_coarse_client.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
-	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
-
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server: socket/image_change_quality_socket_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
 
@@ -492,8 +486,6 @@ build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_server
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
 
 build_ipc_benchmark_minimal: test_bytes.h
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_coarse_client
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_coarse_server
 build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_client
 build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_server
 
