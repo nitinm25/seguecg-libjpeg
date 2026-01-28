@@ -5,7 +5,7 @@
 
 using namespace std::chrono;
 
-#define TEST_ITERATIONS 1
+#define TEST_ITERATIONS 100
 
 int main() {
     int server_fd = socket_setup_client();
@@ -18,17 +18,21 @@ int main() {
 
     auto enter_time = high_resolution_clock::now();
 
-    //////////////////////////////
+    ////////// libjpeg calls //////////
 
     struct jpeg_parsed_data in_jpeg_data = {0};
     struct jpeg_parsed_data out_jpeg_data = {0};
 
     for (int i = 0; i < TEST_ITERATIONS; i++) {
+        if (i > 0) {
+            mspace_free(shared_heap, in_jpeg_data.image_buffer);
+            mspace_free(shared_heap, out_jpeg_data.image_buffer);
+        }
         in_jpeg_data = read_jpeg(server_fd, shared_heap, inputData, input_size);
         out_jpeg_data = write_jpeg(server_fd, shared_heap, 30, in_jpeg_data);
     }
     
-    //////////////////////////////
+    ///////////////////////////////////
 
     auto exit_time = high_resolution_clock::now();
 

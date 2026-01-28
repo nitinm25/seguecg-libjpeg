@@ -252,6 +252,11 @@ struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned ch
     ipc_jpeg_finish_decompress(server_fd, cinfo);
     ipc_jpeg_destroy_decompress(server_fd, cinfo);
 
+    mspace_free(shared_heap, row_pointer);
+    mspace_free(shared_heap, jerr);
+    mspace_free(shared_heap, cinfo);
+    mspace_free(shared_heap, shared_input);
+
     return ret;
 }
 
@@ -303,6 +308,12 @@ struct jpeg_parsed_data write_jpeg(int server_fd, mspace shared_heap, int qualit
     ret.image_buffer = *outbuffer_ptr;
 
     ipc_jpeg_destroy_compress(server_fd, cinfo);
+
+    mspace_free(shared_heap, row_pointer);
+    mspace_free(shared_heap, jerr);
+    mspace_free(shared_heap, cinfo);
+    mspace_free(shared_heap, outsize_ptr);
+    mspace_free(shared_heap, outbuffer_ptr);
 
     return ret;
 }
