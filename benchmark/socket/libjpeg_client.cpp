@@ -220,7 +220,6 @@ struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned ch
     memset(jerr, 0, sizeof(struct jpeg_error_mgr));
 
     cinfo->err = ipc_jpeg_std_error(server_fd, jerr);
-    jerr->error_exit = my_error_exit;
 
     ipc_jpeg_create_decompress(server_fd, cinfo);
 

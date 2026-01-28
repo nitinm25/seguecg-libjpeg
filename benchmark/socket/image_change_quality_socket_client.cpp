@@ -16,12 +16,11 @@ int main() {
     void* shm_ptr;
     mspace shared_heap = shared_memory_setup(shm_fd, shm_ptr, false);
 
-    auto enter_time = high_resolution_clock::now();
-
     ////////// libjpeg calls //////////
+    
+    struct jpeg_parsed_data in_jpeg_data {0}, out_jpeg_data {0};
 
-    struct jpeg_parsed_data in_jpeg_data = {0};
-    struct jpeg_parsed_data out_jpeg_data = {0};
+    auto enter_time = high_resolution_clock::now();
 
     for (int i = 0; i < TEST_ITERATIONS; i++) {
         if (i > 0) {
@@ -32,9 +31,9 @@ int main() {
         out_jpeg_data = write_jpeg(server_fd, shared_heap, 30, in_jpeg_data);
     }
     
-    ///////////////////////////////////
-
     auto exit_time = high_resolution_clock::now();
+
+    ///////////////////////////////////
 
     ipc_terminate(server_fd);
 
