@@ -23,13 +23,13 @@ int main() {
     //////////////////////////////
     
     // Validation
-    // RELEASE_ASSERT(output_size == out_jpeg_data.image_buffer_size, "Size mismatch");
-    // for(unsigned long i = 0; i < output_size; i++) {
-    //     if (out_jpeg_data.image_buffer[i] != outputData[i]) {
-    //     printf("Output data doesn't match at index: %lu!\n", i);
-    //     exit(1);
-    //     }
-    // }
+    RELEASE_ASSERT(output_size == out_jpeg_data.image_buffer_size, "Size mismatch");
+    for(unsigned long i = 0; i < output_size; i++) {
+        if (out_jpeg_data.image_buffer[i] != outputData[i]) {
+            printf("Output data doesn't match at index: %lu!\n", i);
+            exit(1);
+        }
+    }
 
     ipc_terminate(server_fd);
 

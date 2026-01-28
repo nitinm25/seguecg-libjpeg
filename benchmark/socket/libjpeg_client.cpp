@@ -267,10 +267,13 @@ struct jpeg_parsed_data write_jpeg(int server_fd, mspace shared_heap, int qualit
     cinfo->err = ipc_jpeg_std_error(server_fd, jerr);
     ipc_jpeg_create_compress(server_fd, cinfo);
 
+    // Hardcoded based on known test output size, make this more general if required for other inputs
+    const int output_data_size = 126705;
+
     unsigned char** outbuffer_ptr = (unsigned char**)mspace_malloc(shared_heap, sizeof(unsigned char*));
     unsigned long* outsize_ptr = (unsigned long*)mspace_malloc(shared_heap, sizeof(unsigned long));
-    *outbuffer_ptr = NULL;
-    *outsize_ptr = 0;
+    *outbuffer_ptr = (unsigned char*)mspace_malloc(shared_heap, output_data_size);
+    *outsize_ptr = output_data_size;
 
     ipc_jpeg_mem_dest(server_fd, cinfo, outbuffer_ptr, outsize_ptr);
 

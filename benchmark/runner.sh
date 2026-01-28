@@ -16,7 +16,7 @@ multi_exec_socket() {
         sleep 1
         ./"$2"
 
-        sleep 5
+        # sleep 5
     done
     echo ""
 }
@@ -33,7 +33,7 @@ IPC_SOCKET_SERVER='../build_nosimd_release/image_change_quality_socket_server'
 IPC_SOCKET_CLIENT='../build_nosimd_release/image_change_quality_socket_client'
 
 # Build
-# make clean
+make clean
 # make build_ipc_benchmark > /dev/null
 make build_ipc_benchmark_minimal > /dev/null
 
