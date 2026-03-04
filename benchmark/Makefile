@@ -360,6 +360,9 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_noop: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_shm: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< -DRLBOX_IPC_SHM $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
+
 ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_wasm2c: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 	rm -rf ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
 	mkdir -p ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
@@ -482,6 +485,7 @@ build_ipc_benchmark: ../build_nosimd_wasm_release/image_change_quality_rlbox_was
 build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage
 build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck
 build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_server
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
 
