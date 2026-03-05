@@ -12,24 +12,24 @@
 
 namespace rlbox {
 
-class rlbox_noop_sandbox;
+class rlbox_ipc_shm_sandbox;
 
-struct rlbox_noop_sandbox_thread_data
+struct rlbox_ipc_shm_sandbox_thread_data
 {
-  rlbox_noop_sandbox* sandbox;
+  rlbox_ipc_shm_sandbox* sandbox;
   uint32_t last_callback_invoked;
 };
 
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
 
-rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
-#  define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                \
-    thread_local rlbox::rlbox_noop_sandbox_thread_data                         \
-      rlbox_noop_sandbox_thread_info{ 0, 0 };                                  \
+rlbox_ipc_shm_sandbox_thread_data* get_rlbox_ipc_shm_sandbox_thread_data();
+#  define RLBOX_IPC_SHM_SANDBOX_STATIC_VARIABLES()                             \
+    thread_local rlbox::rlbox_ipc_shm_sandbox_thread_data                      \
+      rlbox_ipc_shm_sandbox_thread_info{ 0, 0 };                               \
     namespace rlbox {                                                          \
-      rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data()     \
+      rlbox_ipc_shm_sandbox_thread_data* get_rlbox_ipc_shm_sandbox_thread_data() \
       {                                                                        \
-        return &rlbox_noop_sandbox_thread_info;                                \
+        return &rlbox_ipc_shm_sandbox_thread_info;                             \
       }                                                                        \
     }                                                                          \
     static_assert(true, "Enforce semi-colon")
@@ -37,11 +37,9 @@ rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
 #endif
 
 /**
- * @brief Class that implements the null sandbox. This sandbox doesn't actually
- * provide any isolation and only serves as a stepping stone towards migrating
- * an application to use the RLBox API.
+ * @brief Class that implements the IPC shared memory sandbox.
  */
-class rlbox_noop_sandbox
+class rlbox_ipc_shm_sandbox
 {
 public:
   // Stick with the system defaults
@@ -61,14 +59,14 @@ private:
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-  thread_local static inline rlbox_noop_sandbox_thread_data thread_data{ 0, 0 };
+  thread_local static inline rlbox_ipc_shm_sandbox_thread_data thread_data{ 0, 0 };
 #endif
 
   template<uint32_t N, typename T_Ret, typename... T_Args>
   static T_Ret callback_trampoline(T_Args... params)
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_ipc_shm_sandbox_thread_data();
 #endif
     thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
@@ -106,7 +104,7 @@ protected:
   static inline void* impl_get_unsandboxed_pointer_no_ctx(
     T_PointerType p,
     const void* /* example_unsandboxed_ptr */,
-    rlbox_noop_sandbox* (* // Func ptr
+    rlbox_ipc_shm_sandbox* (* // Func ptr
                          /* param: expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
@@ -117,7 +115,7 @@ protected:
   static inline T_PointerType impl_get_sandboxed_pointer_no_ctx(
     const void* p,
     const void* /* example_unsandboxed_ptr */,
-    rlbox_noop_sandbox* (* // Func ptr
+    rlbox_ipc_shm_sandbox* (* // Func ptr
                          /* param: expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
@@ -171,14 +169,14 @@ protected:
     return nullptr;
   }
 
-#define rlbox_noop_sandbox_lookup_symbol(func_name)                            \
+#define rlbox_ipc_shm_sandbox_lookup_symbol(func_name)                         \
   reinterpret_cast<void*>(&func_name) /* NOLINT */
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_ipc_shm_sandbox_thread_data();
 #endif
     auto old_sandbox = thread_data.sandbox;
     thread_data.sandbox = this;
@@ -208,11 +206,11 @@ protected:
     return reinterpret_cast<T_PointerType>(chosen_trampoline);
   }
 
-  static inline std::pair<rlbox_noop_sandbox*, void*>
+  static inline std::pair<rlbox_ipc_shm_sandbox*, void*>
   impl_get_executed_callback_sandbox_and_key()
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_ipc_shm_sandbox_thread_data();
 #endif
     auto sandbox = thread_data.sandbox;
     auto callback_num = thread_data.last_callback_invoked;

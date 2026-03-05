@@ -21,9 +21,9 @@ RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, wasm2c)
 
 #elif defined(RLBOX_IPC_SHM)
 
-#define RLBOX_USE_STATIC_CALLS() rlbox_noop_sandbox_lookup_symbol
+#define RLBOX_USE_STATIC_CALLS() rlbox_ipc_shm_sandbox_lookup_symbol
 #include "socket/rlbox_ipc_shm_sandbox.hpp"
-RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, noop)
+RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_shm)
 
 #else
 
