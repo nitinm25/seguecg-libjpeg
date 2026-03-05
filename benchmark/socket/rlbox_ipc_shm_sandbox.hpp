@@ -3,12 +3,24 @@
 #include <cstdint>
 #include <cstdlib>
 #include <mutex>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <cstring>
+
+#include "common.cpp"
+#include "socket.cpp"
+
 #ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
 #  include <shared_mutex>
 #endif
 #include <utility>
 
 #include "rlbox_helpers.hpp"
+
+#ifndef IPC_SERVER_PATH
+#  define IPC_SERVER_PATH "../build_nosimd_release/image_change_quality_socket_server"
+#endif
 
 namespace rlbox {
 
@@ -58,6 +70,12 @@ private:
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
+  int server_fd = -1;
+  int shm_fd = -1;
+  void* shm_ptr = nullptr;
+  void* shared_heap = nullptr;
+  pid_t server_pid = -1;
+
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
   thread_local static inline rlbox_ipc_shm_sandbox_thread_data thread_data{ 0, 0 };
 #endif
@@ -84,9 +102,58 @@ private:
   }
 
 protected:
-  inline void impl_create_sandbox() {}
+  inline void impl_create_sandbox()
+  {
+    // Fork the server process
+    server_pid = fork();
+    if (server_pid < 0) {
+      perror("fork");
+      abort();
+    }
+    if (server_pid == 0) {
+      // Child: exec the server binary
+      execl(IPC_SERVER_PATH,
+            "image_change_quality_socket_server", nullptr);
+      perror("execl");
+      _exit(1);
+    }
 
-  inline void impl_destroy_sandbox() {}
+    // Parent: give server a moment to start listening
+    usleep(100000); // 100ms
+
+    // Set up shared memory (as non-creator; server creates it)
+    shared_heap = shared_memory_setup(shm_fd, shm_ptr, false);
+
+    // Connect to server via Unix domain socket
+    server_fd = socket_setup_client();
+  }
+
+  inline void impl_destroy_sandbox()
+  {
+    // Tell server to terminate
+    uint32_t cmd = IPC_TERMINATE;
+    socket_send(server_fd, (unsigned char*)&cmd, sizeof(cmd));
+
+    close(server_fd);
+    server_fd = -1;
+
+    // Wait for server process
+    if (server_pid > 0) {
+      waitpid(server_pid, nullptr, 0);
+      server_pid = -1;
+    }
+
+    // Clean up shared memory
+    if (shm_ptr) {
+      munmap(shm_ptr, SHARED_MEM_SIZE);
+      shm_ptr = nullptr;
+    }
+    if (shm_fd >= 0) {
+      close(shm_fd);
+      shm_fd = -1;
+    }
+    shared_heap = nullptr;
+  }
 
   template<typename T>
   inline void* impl_get_unsandboxed_pointer(T_PointerType p) const

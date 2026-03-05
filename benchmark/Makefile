@@ -492,7 +492,7 @@ build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
 build_ipc_benchmark_minimal: test_bytes.h
 build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
 # build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_client
-# build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_server
+build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_server
 
 test_rlbox:
 	cd $(REPO_PATH)/build_$(BUILD_TYPE_DIR) && echo -n "Stock " && ./image_change_quality_rlbox_noop

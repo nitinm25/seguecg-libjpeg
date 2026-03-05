@@ -11,7 +11,16 @@
 
 #define USE_DL_PREFIX 1  // Prefix functions with dl_
 #define MSPACES 1        // Enable mspace API
+
+// dlmalloc brings up too many warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wextra"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wexpansion-to-defined"
 #include "dlmalloc.c"
+#pragma GCC diagnostic pop
 
 
 enum IPCCommand : uint32_t {
