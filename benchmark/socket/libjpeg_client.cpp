@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "common.cpp"
-#include "socket.cpp"
 #include "jpeglib.h"
+
+// Only needed for standalone IPC benchmark
+#ifndef RLBOX_IPC_SHM
 
 #define RELEASE_ASSERT(cond, msg)           \
   if(!(cond))                               \
@@ -24,6 +25,7 @@ struct jpeg_parsed_data {
     int image_width;
 };
 
+#endif
 
 jpeg_error_mgr* ipc_jpeg_std_error(int server_fd, jpeg_error_mgr *err) {
     uint32_t ipc_call_num = IPC_JPEG_STD_ERROR;
@@ -206,6 +208,8 @@ void ipc_terminate(int server_fd) {
     socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
 }
 
+#ifndef RLBOX_IPC_SHM
+
 struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned char *shared_input, unsigned long fsize) {
     struct jpeg_parsed_data ret = {0};
 
@@ -311,3 +315,5 @@ struct jpeg_parsed_data write_jpeg(int server_fd, mspace shared_heap, int qualit
 
     return ret;
 }
+
+#endif

@@ -1,4 +1,6 @@
 #include <chrono>
+#include "common.cpp"
+#include "socket.cpp"
 #include "libjpeg_client.cpp"
 
 #include "../test_bytes.h"

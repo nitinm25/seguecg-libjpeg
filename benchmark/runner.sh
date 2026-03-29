@@ -51,4 +51,4 @@ multi_exec "rlbox_ipc_shm" "$RLBOX_IPC_SHM"
 # multi_exec "sa_wasm2c_watch" "$SA_WASM2C_WATCH"
 
 # IPC socket
-# multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"
+multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"

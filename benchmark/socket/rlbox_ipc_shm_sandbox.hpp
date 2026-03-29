@@ -10,6 +10,7 @@
 
 #include "common.cpp"
 #include "socket.cpp"
+#include "libjpeg_client.cpp"
 
 #ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
 #  include <shared_mutex>
@@ -73,7 +74,7 @@ private:
   int server_fd = -1;
   int shm_fd = -1;
   void* shm_ptr = nullptr;
-  void* shared_heap = nullptr;
+  mspace shared_heap = nullptr;
   pid_t server_pid = -1;
 
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
@@ -95,10 +96,93 @@ private:
 #endif
       func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
     }
-    // Callbacks are invoked through function pointers, cannot use std::forward
-    // as we don't have caller context for T_Args, which means they are all
-    // effectively passed by value
     return func(params...);
+  }
+
+public:
+  int get_server_fd() const { return server_fd; }
+
+  static rlbox_ipc_shm_sandbox* get_current_sandbox()
+  {
+#ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
+    auto& thread_data = *get_rlbox_ipc_shm_sandbox_thread_data();
+#endif
+    return thread_data.sandbox;
+  }
+
+  // Forward to libjpeg_client IPC functions.
+  static jpeg_error_mgr* ipc_jpeg_std_error(jpeg_error_mgr* err) {
+    return ::ipc_jpeg_std_error(get_current_sandbox()->server_fd, err);
+  }
+
+  static void ipc_jpeg_CreateDecompress(j_decompress_ptr cinfo, int, size_t) {
+    ::ipc_jpeg_create_decompress(get_current_sandbox()->server_fd, cinfo);
+  }
+
+  static void ipc_jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char* buffer, unsigned long size) {
+    ::ipc_jpeg_mem_src(get_current_sandbox()->server_fd, cinfo, const_cast<unsigned char*>(buffer), size);
+  }
+
+  static int ipc_jpeg_read_header(j_decompress_ptr cinfo, boolean require_image) {
+    ::ipc_jpeg_read_header(get_current_sandbox()->server_fd, cinfo, require_image);
+    return 0;
+  }
+
+  static boolean ipc_jpeg_start_decompress(j_decompress_ptr cinfo) {
+    ::ipc_jpeg_start_decompress(get_current_sandbox()->server_fd, cinfo);
+    return TRUE;
+  }
+
+  static JDIMENSION ipc_jpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY buffer, JDIMENSION max_lines) {
+    ::ipc_jpeg_read_scanlines(get_current_sandbox()->server_fd, cinfo, buffer, max_lines);
+    return 0;
+  }
+
+  static boolean ipc_jpeg_finish_decompress(j_decompress_ptr cinfo) {
+    ::ipc_jpeg_finish_decompress(get_current_sandbox()->server_fd, cinfo);
+    return TRUE;
+  }
+
+  static void ipc_jpeg_destroy_decompress(j_decompress_ptr cinfo) {
+    ::ipc_jpeg_destroy_decompress(get_current_sandbox()->server_fd, cinfo);
+  }
+
+  static void ipc_jpeg_CreateCompress(j_compress_ptr cinfo, int, size_t) {
+    ::ipc_jpeg_create_compress(get_current_sandbox()->server_fd, cinfo);
+  }
+
+  static void ipc_jpeg_mem_dest(j_compress_ptr cinfo, unsigned char** outbuffer, unsigned long* outsize) {
+    static const unsigned long OUTPUT_BUF_SIZE = 126705;
+    auto* sbx = get_current_sandbox();
+    if (*outbuffer == nullptr || *outsize == 0) {
+      *outbuffer = (unsigned char*)mspace_malloc(sbx->shared_heap, OUTPUT_BUF_SIZE);
+      *outsize = OUTPUT_BUF_SIZE;
+    }
+    ::ipc_jpeg_mem_dest(sbx->server_fd, cinfo, outbuffer, outsize);
+  }
+
+  static void ipc_jpeg_set_defaults(j_compress_ptr cinfo) {
+    ::ipc_jpeg_set_defaults(get_current_sandbox()->server_fd, cinfo);
+  }
+
+  static void ipc_jpeg_set_quality(j_compress_ptr cinfo, int quality, boolean force_baseline) {
+    ::ipc_jpeg_set_quality(get_current_sandbox()->server_fd, cinfo, quality, force_baseline);
+  }
+
+  static void ipc_jpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables) {
+    ::ipc_jpeg_start_compress(get_current_sandbox()->server_fd, cinfo, write_all_tables);
+  }
+
+  static JDIMENSION ipc_jpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION num_lines) {
+    return ::ipc_jpeg_write_scanlines(get_current_sandbox()->server_fd, cinfo, scanlines, num_lines);
+  }
+
+  static void ipc_jpeg_finish_compress(j_compress_ptr cinfo) {
+    ::ipc_jpeg_finish_compress(get_current_sandbox()->server_fd, cinfo);
+  }
+
+  static void ipc_jpeg_destroy_compress(j_compress_ptr cinfo) {
+    ::ipc_jpeg_destroy_compress(get_current_sandbox()->server_fd, cinfo);
   }
 
 protected:
@@ -191,32 +275,37 @@ protected:
 
   inline T_PointerType impl_malloc_in_sandbox(size_t size)
   {
-    void* p = malloc(size);
+    void* p = mspace_malloc(shared_heap, size);
     return p;
   }
 
-  inline void impl_free_in_sandbox(T_PointerType p) { free(p); }
+  inline void impl_free_in_sandbox(T_PointerType p) { mspace_free(shared_heap, p); }
 
   static inline bool impl_is_in_same_sandbox(const void*, const void*)
   {
     return true;
   }
 
-  inline bool impl_is_pointer_in_sandbox_memory(const void*) { return true; }
-  inline bool impl_is_pointer_in_app_memory(const void*) { return true; }
+  inline bool impl_is_pointer_in_sandbox_memory(const void* p)
+  {
+    uintptr_t addr = reinterpret_cast<uintptr_t>(p);
+    uintptr_t base = reinterpret_cast<uintptr_t>(shm_ptr);
+    return addr >= base && addr < base + SHARED_MEM_SIZE;
+  }
+
+  inline bool impl_is_pointer_in_app_memory(const void* p)
+  {
+    return !impl_is_pointer_in_sandbox_memory(p);
+  }
 
   inline size_t impl_get_total_memory()
   {
-    return std::numeric_limits<size_t>::max();
+    return SHARED_MEM_SIZE;
   }
 
   inline void* impl_get_memory_location()
   {
-    // There isn't any sandbox memory for the noop_sandbox as we just redirect
-    // to the app. Also, this is mostly used for pointer swizzling or sandbox
-    // bounds checks which is also not present/not required. So we can just
-    // return null
-    return nullptr;
+    return shm_ptr;
   }
 
   // adding a template so that we can use static_assert to fire only if this
@@ -237,7 +326,7 @@ protected:
   }
 
 #define rlbox_ipc_shm_sandbox_lookup_symbol(func_name)                         \
-  reinterpret_cast<void*>(&func_name) /* NOLINT */
+  reinterpret_cast<void*>(&rlbox::rlbox_ipc_shm_sandbox::ipc_##func_name) /* NOLINT */
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
