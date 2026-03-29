@@ -19,7 +19,7 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wexpansion-to-defined"
-#include "dlmalloc.c"
+#include "../dlmalloc.c"
 #pragma GCC diagnostic pop
 
 

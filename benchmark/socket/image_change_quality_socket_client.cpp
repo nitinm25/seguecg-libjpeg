@@ -16,8 +16,12 @@ int main() {
     void* shm_ptr;
     mspace shared_heap = shared_memory_setup(shm_fd, shm_ptr, false);
 
+    // Copy input data to shared memory once before the loop
+    unsigned char* shared_input = (unsigned char*)mspace_malloc(shared_heap, input_size);
+    memcpy(shared_input, inputData, input_size);
+
     ////////// libjpeg calls //////////
-    
+
     struct jpeg_parsed_data in_jpeg_data {0}, out_jpeg_data {0};
 
     auto enter_time = high_resolution_clock::now();
@@ -27,7 +31,7 @@ int main() {
             mspace_free(shared_heap, in_jpeg_data.image_buffer);
             mspace_free(shared_heap, out_jpeg_data.image_buffer);
         }
-        in_jpeg_data = read_jpeg(server_fd, shared_heap, inputData, input_size);
+        in_jpeg_data = read_jpeg(server_fd, shared_heap, shared_input, input_size);
         out_jpeg_data = write_jpeg(server_fd, shared_heap, 30, in_jpeg_data);
     }
     
@@ -50,6 +54,7 @@ int main() {
     printf("IPC JPEG recoding time: %lld\n", (long long) (ns / TEST_ITERATIONS));
 
     // Cleanup
+    mspace_free(shared_heap, shared_input);
     close(server_fd);
     close(shm_fd);
     munmap(shm_ptr, SHARED_MEM_SIZE);

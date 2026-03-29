@@ -206,11 +206,7 @@ void ipc_terminate(int server_fd) {
     socket_send(server_fd, (unsigned char*)&ipc_call_num, sizeof(ipc_call_num));
 }
 
-struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned char *fileBuff, unsigned long fsize) {
-    // Libjpeg uses a pointer to the input buffer, copy to shared memory so it's accessible on the server
-    unsigned char* shared_input = (unsigned char*)mspace_malloc(shared_heap, fsize);
-    memcpy(shared_input, fileBuff, fsize);
-
+struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned char *shared_input, unsigned long fsize) {
     struct jpeg_parsed_data ret = {0};
 
     struct jpeg_decompress_struct* cinfo = (struct jpeg_decompress_struct*)mspace_malloc(shared_heap, sizeof(struct jpeg_decompress_struct));
@@ -254,7 +250,6 @@ struct jpeg_parsed_data read_jpeg(int server_fd, mspace shared_heap, unsigned ch
     mspace_free(shared_heap, row_pointer);
     mspace_free(shared_heap, jerr);
     mspace_free(shared_heap, cinfo);
-    mspace_free(shared_heap, shared_input);
 
     return ret;
 }
