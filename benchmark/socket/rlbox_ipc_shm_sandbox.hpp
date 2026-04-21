@@ -10,7 +10,6 @@
 
 #include "common.cpp"
 #include "socket.cpp"
-#include "libjpeg_client.cpp"
 
 #ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
 #  include <shared_mutex>
@@ -99,6 +98,23 @@ private:
     return func(params...);
   }
 
+  template<typename... Args>
+  static void ipc_call_void(int fd, uint32_t cmd, const Args&... args) {
+    socket_send(fd, (unsigned char*)&cmd, sizeof(cmd));
+    (socket_send(fd, (unsigned char*)&args, sizeof(args)), ...);
+    uint32_t ack;
+    socket_recv(fd, (unsigned char*)&ack, sizeof(ack));
+  }
+
+  template<typename RetT, typename... Args>
+  static RetT ipc_call_ret(int fd, uint32_t cmd, const Args&... args) {
+    socket_send(fd, (unsigned char*)&cmd, sizeof(cmd));
+    (socket_send(fd, (unsigned char*)&args, sizeof(args)), ...);
+    RetT result;
+    socket_recv(fd, (unsigned char*)&result, sizeof(result));
+    return result;
+  }
+
 public:
   int get_server_fd() const { return server_fd; }
 
@@ -110,45 +126,44 @@ public:
     return thread_data.sandbox;
   }
 
-  // Forward to libjpeg_client IPC functions.
   static jpeg_error_mgr* ipc_jpeg_std_error(jpeg_error_mgr* err) {
-    return ::ipc_jpeg_std_error(get_current_sandbox()->server_fd, err);
+    return ipc_call_ret<jpeg_error_mgr*>(get_current_sandbox()->server_fd, IPC_JPEG_STD_ERROR, err);
   }
 
   static void ipc_jpeg_CreateDecompress(j_decompress_ptr cinfo, int, size_t) {
-    ::ipc_jpeg_create_decompress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_CREATE_DECOMPRESS, cinfo);
   }
 
   static void ipc_jpeg_mem_src(j_decompress_ptr cinfo, const unsigned char* buffer, unsigned long size) {
-    ::ipc_jpeg_mem_src(get_current_sandbox()->server_fd, cinfo, const_cast<unsigned char*>(buffer), size);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_MEM_SRC, cinfo, const_cast<unsigned char*>(buffer), size);
   }
 
   static int ipc_jpeg_read_header(j_decompress_ptr cinfo, boolean require_image) {
-    ::ipc_jpeg_read_header(get_current_sandbox()->server_fd, cinfo, require_image);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_READ_HEADER, cinfo, require_image);
     return 0;
   }
 
   static boolean ipc_jpeg_start_decompress(j_decompress_ptr cinfo) {
-    ::ipc_jpeg_start_decompress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_START_DECOMPRESS, cinfo);
     return TRUE;
   }
 
   static JDIMENSION ipc_jpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY buffer, JDIMENSION max_lines) {
-    ::ipc_jpeg_read_scanlines(get_current_sandbox()->server_fd, cinfo, buffer, max_lines);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_READ_SCANLINES, cinfo, buffer, max_lines);
     return 0;
   }
 
   static boolean ipc_jpeg_finish_decompress(j_decompress_ptr cinfo) {
-    ::ipc_jpeg_finish_decompress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_FINISH_DECOMPRESS, cinfo);
     return TRUE;
   }
 
   static void ipc_jpeg_destroy_decompress(j_decompress_ptr cinfo) {
-    ::ipc_jpeg_destroy_decompress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_DESTROY_DECOMPRESS, cinfo);
   }
 
   static void ipc_jpeg_CreateCompress(j_compress_ptr cinfo, int, size_t) {
-    ::ipc_jpeg_create_compress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_CREATE_COMPRESS, cinfo);
   }
 
   static void ipc_jpeg_mem_dest(j_compress_ptr cinfo, unsigned char** outbuffer, unsigned long* outsize) {
@@ -158,31 +173,31 @@ public:
       *outbuffer = (unsigned char*)mspace_malloc(sbx->shared_heap, OUTPUT_BUF_SIZE);
       *outsize = OUTPUT_BUF_SIZE;
     }
-    ::ipc_jpeg_mem_dest(sbx->server_fd, cinfo, outbuffer, outsize);
+    ipc_call_void(sbx->server_fd, IPC_JPEG_MEM_DEST, cinfo, outbuffer, outsize);
   }
 
   static void ipc_jpeg_set_defaults(j_compress_ptr cinfo) {
-    ::ipc_jpeg_set_defaults(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_SET_DEFAULTS, cinfo);
   }
 
   static void ipc_jpeg_set_quality(j_compress_ptr cinfo, int quality, boolean force_baseline) {
-    ::ipc_jpeg_set_quality(get_current_sandbox()->server_fd, cinfo, quality, force_baseline);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_SET_QUALITY, cinfo, quality, force_baseline);
   }
 
   static void ipc_jpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables) {
-    ::ipc_jpeg_start_compress(get_current_sandbox()->server_fd, cinfo, write_all_tables);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_START_COMPRESS, cinfo, write_all_tables);
   }
 
   static JDIMENSION ipc_jpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION num_lines) {
-    return ::ipc_jpeg_write_scanlines(get_current_sandbox()->server_fd, cinfo, scanlines, num_lines);
+    return ipc_call_ret<JDIMENSION>(get_current_sandbox()->server_fd, IPC_JPEG_WRITE_SCANLINES, cinfo, scanlines, num_lines);
   }
 
   static void ipc_jpeg_finish_compress(j_compress_ptr cinfo) {
-    ::ipc_jpeg_finish_compress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_FINISH_COMPRESS, cinfo);
   }
 
   static void ipc_jpeg_destroy_compress(j_compress_ptr cinfo) {
-    ::ipc_jpeg_destroy_compress(get_current_sandbox()->server_fd, cinfo);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_DESTROY_COMPRESS, cinfo);
   }
 
 protected:
