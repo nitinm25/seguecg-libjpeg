@@ -63,12 +63,11 @@ void handle_ipc_jpeg_read_header(int client_fd) {
 #ifdef IPC_INSTRUMENT
     uint64_t ts = now_ns();
 #endif
-    jpeg_read_header(cinfo, require_image);
+    int result = jpeg_read_header(cinfo, require_image);
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
-    uint32_t ack = 1;
-    socket_send(client_fd, (unsigned char*)&ack, sizeof(ack));
+    socket_send(client_fd, (unsigned char*)&result, sizeof(result));
 }
 
 void handle_ipc_jpeg_start_decompress(int client_fd) {
@@ -77,12 +76,11 @@ void handle_ipc_jpeg_start_decompress(int client_fd) {
 #ifdef IPC_INSTRUMENT
     uint64_t ts = now_ns();
 #endif
-    jpeg_start_decompress(cinfo);
+    boolean result = jpeg_start_decompress(cinfo);
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
-    uint32_t ack = 1;
-    socket_send(client_fd, (unsigned char*)&ack, sizeof(ack));
+    socket_send(client_fd, (unsigned char*)&result, sizeof(result));
 }
 
 void handle_ipc_jpeg_read_scanlines(int client_fd) {
@@ -96,12 +94,11 @@ void handle_ipc_jpeg_read_scanlines(int client_fd) {
 #ifdef IPC_INSTRUMENT
     uint64_t ts = now_ns();
 #endif
-    jpeg_read_scanlines(cinfo, buffer, max_lines);
+    JDIMENSION result = jpeg_read_scanlines(cinfo, buffer, max_lines);
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
-    uint32_t ack = 1;
-    socket_send(client_fd, (unsigned char*)&ack, sizeof(ack));
+    socket_send(client_fd, (unsigned char*)&result, sizeof(result));
 }
 
 void handle_ipc_jpeg_finish_decompress(int client_fd) {
@@ -110,12 +107,11 @@ void handle_ipc_jpeg_finish_decompress(int client_fd) {
 #ifdef IPC_INSTRUMENT
     uint64_t ts = now_ns();
 #endif
-    jpeg_finish_decompress(cinfo);
+    boolean result = jpeg_finish_decompress(cinfo);
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
-    uint32_t ack = 1;
-    socket_send(client_fd, (unsigned char*)&ack, sizeof(ack));
+    socket_send(client_fd, (unsigned char*)&result, sizeof(result));
 }
 
 void handle_ipc_jpeg_destroy_decompress(int client_fd) {

@@ -169,23 +169,19 @@ public:
   }
 
   static int ipc_jpeg_read_header(j_decompress_ptr cinfo, boolean require_image) {
-    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_READ_HEADER, cinfo, require_image);
-    return 0;
+    return ipc_call_ret<int>(get_current_sandbox()->server_fd, IPC_JPEG_READ_HEADER, cinfo, require_image);
   }
 
   static boolean ipc_jpeg_start_decompress(j_decompress_ptr cinfo) {
-    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_START_DECOMPRESS, cinfo);
-    return TRUE;
+    return ipc_call_ret<boolean>(get_current_sandbox()->server_fd, IPC_JPEG_START_DECOMPRESS, cinfo);
   }
 
   static JDIMENSION ipc_jpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY buffer, JDIMENSION max_lines) {
-    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_READ_SCANLINES, cinfo, buffer, max_lines);
-    return 0;
+    return ipc_call_ret<JDIMENSION>(get_current_sandbox()->server_fd, IPC_JPEG_READ_SCANLINES, cinfo, buffer, max_lines);
   }
 
   static boolean ipc_jpeg_finish_decompress(j_decompress_ptr cinfo) {
-    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_FINISH_DECOMPRESS, cinfo);
-    return TRUE;
+    return ipc_call_ret<boolean>(get_current_sandbox()->server_fd, IPC_JPEG_FINISH_DECOMPRESS, cinfo);
   }
 
   static void ipc_jpeg_destroy_decompress(j_decompress_ptr cinfo) {

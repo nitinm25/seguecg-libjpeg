@@ -33,7 +33,7 @@ RLBOX_IPC_SHM='../build_nosimd_release/image_change_quality_rlbox_ipc_shm'
 RLBOX_IPC_SHM_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument'
 
 # Build
-# make clean
+make clean
 make build_ipc_benchmark > /dev/null
 make build_ipc_benchmark_instrument > /dev/null
 # make build_ipc_benchmark_minimal > /dev/null
@@ -55,4 +55,4 @@ multi_exec "rlbox_ipc_shm_instrument" "$RLBOX_IPC_SHM_INSTRUMENT"
 # multi_exec "sa_wasm2c_watch" "$SA_WASM2C_WATCH"
 
 # IPC socket
-multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"
+# multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"
