@@ -19,7 +19,7 @@
 #include "rlbox_helpers.hpp"
 
 #ifndef IPC_SERVER_PATH
-#  define IPC_SERVER_PATH "../build_nosimd_release/image_change_quality_socket_server"
+#  define IPC_SERVER_PATH "../build_nosimd_release/image_change_quality_ipc_plugin_server"
 #endif
 
 namespace rlbox {
