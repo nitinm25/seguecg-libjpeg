@@ -45,6 +45,22 @@ enum IPCCommand : uint32_t {
 };
 
 
+#ifdef IPC_INSTRUMENT
+#include <time.h>
+
+struct ipc_timing {
+    uint64_t send_ns;
+    uint64_t wait_ns;
+    uint64_t call_count;
+};
+
+static inline uint64_t now_ns() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+}
+#endif
+
 mspace shared_memory_setup(int &shm_fd, void* &shm_ptr, bool create_shm) {
     int flags = create_shm ? (O_CREAT | O_RDWR) : O_RDWR;
     shm_fd = shm_open(SHARED_MEM_NAME, flags, 0666);

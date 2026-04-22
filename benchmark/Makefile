@@ -364,6 +364,18 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_shm: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< -DRLBOX_IPC_SHM $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server_instrument: socket/image_change_quality_socket_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -DIPC_INSTRUMENT -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
+
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_shm_instrument: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server_instrument
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -DRLBOX_IPC_SHM -DIPC_INSTRUMENT \
+	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server_instrument"' \
+	  -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
+
+build_ipc_benchmark_instrument: test_bytes.h
+build_ipc_benchmark_instrument: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_socket_server_instrument
+build_ipc_benchmark_instrument: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_shm_instrument
+
 ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_wasm2c: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 	rm -rf ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
 	mkdir -p ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs

@@ -76,6 +76,12 @@ private:
   mspace shared_heap = nullptr;
   pid_t server_pid = -1;
 
+#ifdef IPC_INSTRUMENT
+public:
+  static inline ipc_timing timing{};
+private:
+#endif
+
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
   thread_local static inline rlbox_ipc_shm_sandbox_thread_data thread_data{ 0, 0 };
 #endif
@@ -100,18 +106,42 @@ private:
 
   template<typename... Args>
   static void ipc_call_void(int fd, uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
     socket_send(fd, (unsigned char*)&cmd, sizeof(cmd));
     (socket_send(fd, (unsigned char*)&args, sizeof(args)), ...);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
     uint32_t ack;
     socket_recv(fd, (unsigned char*)&ack, sizeof(ack));
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
   }
 
   template<typename RetT, typename... Args>
   static RetT ipc_call_ret(int fd, uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
     socket_send(fd, (unsigned char*)&cmd, sizeof(cmd));
     (socket_send(fd, (unsigned char*)&args, sizeof(args)), ...);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
     RetT result;
     socket_recv(fd, (unsigned char*)&result, sizeof(result));
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
     return result;
   }
 

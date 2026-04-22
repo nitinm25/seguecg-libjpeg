@@ -354,6 +354,15 @@ int main(int argc, char** argv) {
   int64_t ns = duration_cast<nanoseconds>(exit_time - enter_time).count();
   printf("JPEG recoding time: %lld\n", (long long) (ns / test_iterations));
 
+#if defined(IPC_INSTRUMENT) && defined(RLBOX_IPC_SHM)
+  {
+    auto& t = rlbox::rlbox_ipc_shm_sandbox::timing;
+    printf("calls_per_iter\t%llu\n", (unsigned long long)(t.call_count / test_iterations));
+    printf("send_per_iter\t%llu\n",  (unsigned long long)(t.send_ns / test_iterations));
+    printf("wait_per_iter\t%llu\n",  (unsigned long long)(t.wait_ns / test_iterations));
+  }
+#endif
+
   if (in_jpeg_data.image_buffer) {
     sandbox.free_in_sandbox(in_jpeg_data.image_buffer);
   }
