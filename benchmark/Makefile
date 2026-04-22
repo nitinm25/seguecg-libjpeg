@@ -377,10 +377,6 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_plugin_server_instrument"' \
 	  -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
-build_ipc_benchmark_instrument: test_bytes.h
-build_ipc_benchmark_instrument: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_plugin_server_instrument
-build_ipc_benchmark_instrument: ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_shm_instrument
-
 ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_wasm2c: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 	rm -rf ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
 	mkdir -p ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
@@ -508,9 +504,11 @@ build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_server
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
 
 build_ipc_benchmark_minimal: test_bytes.h
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
-# build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_client
+build_ipc_benchmark_minimal: ../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c
+build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_client
 build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_server
+build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
+build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument
 
 test_rlbox:
 	cd $(REPO_PATH)/build_$(BUILD_TYPE_DIR) && echo -n "Stock " && ./image_change_quality_rlbox_noop
