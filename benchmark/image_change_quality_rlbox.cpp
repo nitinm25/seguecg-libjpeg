@@ -19,11 +19,18 @@ using namespace std::chrono;
 #include "rlbox_wasm2c_sandbox.hpp"
 RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, wasm2c)
 
-#elif defined(RLBOX_IPC_SHM)
+#elif defined(RLBOX_IPC_SOCKET)
 
-#define RLBOX_USE_STATIC_CALLS() rlbox_ipc_shm_sandbox_lookup_symbol
-#include "ipc_plugin/rlbox_ipc_shm_sandbox.hpp"
-RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_shm)
+#define RLBOX_USE_STATIC_CALLS() rlbox_ipc_socket_sandbox_lookup_symbol
+#include "ipc_plugin/rlbox_ipc_sandbox.hpp"
+RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_socket)
+
+#elif defined(RLBOX_IPC_FUTEX)
+
+#define IPC_TRANSPORT_FUTEX
+#define RLBOX_USE_STATIC_CALLS() rlbox_ipc_futex_sandbox_lookup_symbol
+#include "ipc_plugin/rlbox_ipc_sandbox.hpp"
+RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_futex)
 
 #else
 

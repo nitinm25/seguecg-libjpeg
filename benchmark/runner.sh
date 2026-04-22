@@ -29,25 +29,29 @@ SA_WASM2C_BOUNDSCHECK='../build_nosimd_wasm_sa_release/image_change_quality_wasm
 SA_WASM2C_WATCH='../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch'
 IPC_SOCKET_SERVER='../build_nosimd_release/image_change_quality_socket_server'
 IPC_SOCKET_CLIENT='../build_nosimd_release/image_change_quality_socket_client'
-RLBOX_IPC_SHM='../build_nosimd_release/image_change_quality_rlbox_ipc_shm'
-RLBOX_IPC_SHM_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument'
+RLBOX_IPC_SOCKET='../build_nosimd_release/image_change_quality_rlbox_ipc_socket'
+RLBOX_IPC_SOCKET_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_socket_instrument'
+RLBOX_IPC_FUTEX='../build_nosimd_release/image_change_quality_rlbox_ipc_futex'
+RLBOX_IPC_FUTEX_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_futex_instrument'
 
 # Build
 # make clean
 make build_ipc_benchmark > /dev/null
 
 # Basic
-multi_exec "basic_nosimd" "$BASIC_NOSIMD"
+# multi_exec "basic_nosimd" "$BASIC_NOSIMD"
 
 # RLBox 
-multi_exec "rlbox_noop" "$RLBOX_NOOP"
-multi_exec "rlbox_wasm2c" "$RLBOX_WASM2C"
+# multi_exec "rlbox_noop" "$RLBOX_NOOP"
+# multi_exec "rlbox_wasm2c" "$RLBOX_WASM2C"
 
-multi_exec "rlbox_ipc_shm" "$RLBOX_IPC_SHM"
-multi_exec "rlbox_ipc_shm_instrument" "$RLBOX_IPC_SHM_INSTRUMENT"
+# multi_exec "rlbox_ipc_socket" "$RLBOX_IPC_SOCKET"
+multi_exec "rlbox_ipc_socket_instrument" "$RLBOX_IPC_SOCKET_INSTRUMENT"
+# multi_exec "rlbox_ipc_futex" "$RLBOX_IPC_FUTEX"
+multi_exec "rlbox_ipc_futex_instrument" "$RLBOX_IPC_FUTEX_INSTRUMENT"
 
 # IPC socket standalone
-multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"
+# multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"
 
 # wasm2c standalone
 # multi_exec "sa_wasm2c_guardpage" "$SA_WASM2C_GUARDPAGE"

@@ -61,7 +61,7 @@ static inline uint64_t now_ns() {
 }
 #endif
 
-mspace shared_memory_setup(int &shm_fd, void* &shm_ptr, bool create_shm) {
+mspace shared_memory_setup(int &shm_fd, void* &shm_ptr, bool create_shm, size_t heap_offset = 0) {
     int flags = create_shm ? (O_CREAT | O_RDWR) : O_RDWR;
     shm_fd = shm_open(SHARED_MEM_NAME, flags, 0666);
     if (shm_fd < 0) {
@@ -76,15 +76,16 @@ mspace shared_memory_setup(int &shm_fd, void* &shm_ptr, bool create_shm) {
         }
     }
 
-    shm_ptr = mmap((void*)SHARED_MEM_BASE, SHARED_MEM_SIZE, 
-                   PROT_READ | PROT_WRITE, 
+    shm_ptr = mmap((void*)SHARED_MEM_BASE, SHARED_MEM_SIZE,
+                   PROT_READ | PROT_WRITE,
                    MAP_SHARED | MAP_FIXED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED || shm_ptr != (void*)SHARED_MEM_BASE) {
         perror("mmap");
         exit(1);
     }
 
-    mspace shared_heap = create_mspace_with_base(shm_ptr, SHARED_MEM_SIZE, 0);
+    char* heap_start = (char*)shm_ptr + heap_offset;
+    mspace shared_heap = create_mspace_with_base(heap_start, SHARED_MEM_SIZE - heap_offset, 0);
     if (shared_heap == 0) {
         fprintf(stderr, "Failed to create mspace\n");
         exit(1);
