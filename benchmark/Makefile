@@ -361,7 +361,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_noop: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
-../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server: ipc_plugin/libjpeg_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server: ipc_plugin/libjpeg_server_socket.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
 
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_socket: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server
@@ -369,7 +369,7 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server"' \
 	  $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
-../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server_instrument: ipc_plugin/libjpeg_server.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server_instrument: ipc_plugin/libjpeg_server_socket.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
 	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -DIPC_INSTRUMENT -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
 
 ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_socket_instrument: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_socket_server_instrument
