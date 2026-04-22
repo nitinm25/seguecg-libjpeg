@@ -7,6 +7,12 @@ static uint64_t server_work_ns = 0;
 static uint64_t server_call_count = 0;
 #endif
 
+static mspace shared_heap = nullptr;
+static unsigned char** compress_outbuffer = nullptr;
+static unsigned long*  compress_outsize   = nullptr;
+static unsigned char*  local_compress_buf  = nullptr;
+static unsigned long   local_compress_size = 0;
+
 
 void handle_ipc_jpeg_std_error(int client_fd) {
     jpeg_error_mgr* err;
@@ -150,10 +156,15 @@ void handle_ipc_jpeg_mem_dest(int client_fd) {
     socket_recv(client_fd, (unsigned char*)&cinfo, sizeof(cinfo));
     socket_recv(client_fd, (unsigned char*)&outbuffer, sizeof(outbuffer));
     socket_recv(client_fd, (unsigned char*)&outsize, sizeof(outsize));
+
+    compress_outbuffer = outbuffer;
+    compress_outsize   = outsize;
+    local_compress_buf  = nullptr;
+    local_compress_size = 0;
 #ifdef IPC_INSTRUMENT
     uint64_t ts = now_ns();
 #endif
-    jpeg_mem_dest(cinfo, outbuffer, outsize);
+    jpeg_mem_dest(cinfo, &local_compress_buf, &local_compress_size);
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
@@ -236,6 +247,12 @@ void handle_ipc_jpeg_finish_compress(int client_fd) {
     uint64_t ts = now_ns();
 #endif
     jpeg_finish_compress(cinfo);
+    unsigned char* shm_buf = (unsigned char*)mspace_malloc(shared_heap, local_compress_size);
+    memcpy(shm_buf, local_compress_buf, local_compress_size);
+    free(local_compress_buf);
+    local_compress_buf     = nullptr;
+    *compress_outbuffer    = shm_buf;
+    *compress_outsize      = local_compress_size;
 #ifdef IPC_INSTRUMENT
     server_work_ns += now_ns() - ts; server_call_count++;
 #endif
@@ -347,7 +364,7 @@ int main() {
 
     int shm_fd;
     void* shm_ptr;
-    mspace shared_heap = shared_memory_setup(shm_fd, shm_ptr, true);
+    shared_heap = shared_memory_setup(shm_fd, shm_ptr, true);
 
     int client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) { perror("accept"); }

@@ -193,13 +193,7 @@ public:
   }
 
   static void ipc_jpeg_mem_dest(j_compress_ptr cinfo, unsigned char** outbuffer, unsigned long* outsize) {
-    static const unsigned long OUTPUT_BUF_SIZE = 126705;
-    auto* sbx = get_current_sandbox();
-    if (*outbuffer == nullptr || *outsize == 0) {
-      *outbuffer = (unsigned char*)mspace_malloc(sbx->shared_heap, OUTPUT_BUF_SIZE);
-      *outsize = OUTPUT_BUF_SIZE;
-    }
-    ipc_call_void(sbx->server_fd, IPC_JPEG_MEM_DEST, cinfo, outbuffer, outsize);
+    ipc_call_void(get_current_sandbox()->server_fd, IPC_JPEG_MEM_DEST, cinfo, outbuffer, outsize);
   }
 
   static void ipc_jpeg_set_defaults(j_compress_ptr cinfo) {
