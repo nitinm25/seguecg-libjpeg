@@ -496,19 +496,13 @@ build_ipc_benchmark: test_bytes.h
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_noop
 build_ipc_benchmark: ../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c
-build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage
-build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck
-build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch
-build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
+# build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_guardpage
+# build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_boundscheck
+# build_ipc_benchmark: ../build_nosimd_wasm_sa_release/image_change_quality_wasm2c_watch
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_server
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_socket_client
-
-build_ipc_benchmark_minimal: test_bytes.h
-build_ipc_benchmark_minimal: ../build_nosimd_wasm_release/image_change_quality_rlbox_wasm2c
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_client
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_socket_server
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
-build_ipc_benchmark_minimal: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument
 
 test_rlbox:
 	cd $(REPO_PATH)/build_$(BUILD_TYPE_DIR) && echo -n "Stock " && ./image_change_quality_rlbox_noop

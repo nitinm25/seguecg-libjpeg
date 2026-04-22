@@ -33,15 +33,14 @@ RLBOX_IPC_SHM='../build_nosimd_release/image_change_quality_rlbox_ipc_shm'
 RLBOX_IPC_SHM_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_shm_instrument'
 
 # Build
-make clean
-# make build_ipc_benchmark > /dev/null
-make build_ipc_benchmark_minimal > /dev/null
+# make clean
+make build_ipc_benchmark > /dev/null
 
 # Basic
-# multi_exec "basic_nosimd" "$BASIC_NOSIMD"
+multi_exec "basic_nosimd" "$BASIC_NOSIMD"
 
 # RLBox 
-# multi_exec "rlbox_noop" "$RLBOX_NOOP"
+multi_exec "rlbox_noop" "$RLBOX_NOOP"
 multi_exec "rlbox_wasm2c" "$RLBOX_WASM2C"
 
 multi_exec "rlbox_ipc_shm" "$RLBOX_IPC_SHM"
