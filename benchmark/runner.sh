@@ -33,9 +33,11 @@ RLBOX_IPC_SOCKET='../build_nosimd_release/image_change_quality_rlbox_ipc_socket'
 RLBOX_IPC_SOCKET_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_socket_instrument'
 RLBOX_IPC_FUTEX='../build_nosimd_release/image_change_quality_rlbox_ipc_futex'
 RLBOX_IPC_FUTEX_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_futex_instrument'
+RLBOX_IPC_SPIN='../build_nosimd_release/image_change_quality_rlbox_ipc_spin'
+RLBOX_IPC_SPIN_INSTRUMENT='../build_nosimd_release/image_change_quality_rlbox_ipc_spin_instrument'
 
 # Build
-# make clean
+make clean
 make build_ipc_benchmark > /dev/null
 
 # Basic
@@ -49,6 +51,8 @@ make build_ipc_benchmark > /dev/null
 multi_exec "rlbox_ipc_socket_instrument" "$RLBOX_IPC_SOCKET_INSTRUMENT"
 # multi_exec "rlbox_ipc_futex" "$RLBOX_IPC_FUTEX"
 multi_exec "rlbox_ipc_futex_instrument" "$RLBOX_IPC_FUTEX_INSTRUMENT"
+# multi_exec "rlbox_ipc_spin" "$RLBOX_IPC_SPIN"
+multi_exec "rlbox_ipc_spin_instrument" "$RLBOX_IPC_SPIN_INSTRUMENT"
 
 # IPC socket standalone
 # multi_exec_socket "$IPC_SOCKET_SERVER" "$IPC_SOCKET_CLIENT"

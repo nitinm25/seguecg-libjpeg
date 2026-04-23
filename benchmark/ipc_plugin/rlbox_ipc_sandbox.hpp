@@ -18,6 +18,14 @@
 #  define RLBOX_IPC_STATIC_VARS  RLBOX_IPC_FUTEX_SANDBOX_STATIC_VARIABLES
 #  define RLBOX_IPC_LOOKUP       rlbox_ipc_futex_sandbox_lookup_symbol
 #  define RLBOX_IPC_SERVER_PATH  "../build_nosimd_release/image_change_quality_ipc_futex_server"
+#elif defined(IPC_TRANSPORT_SPIN)
+#  include "spin_transport.h"
+#  define RLBOX_IPC_CLASS        rlbox_ipc_spin_sandbox
+#  define RLBOX_IPC_THREAD_DATA  rlbox_ipc_spin_sandbox_thread_data
+#  define RLBOX_IPC_GET_TD       get_rlbox_ipc_spin_sandbox_thread_data
+#  define RLBOX_IPC_STATIC_VARS  RLBOX_IPC_SPIN_SANDBOX_STATIC_VARIABLES
+#  define RLBOX_IPC_LOOKUP       rlbox_ipc_spin_sandbox_lookup_symbol
+#  define RLBOX_IPC_SERVER_PATH  "../build_nosimd_release/image_change_quality_ipc_spin_server"
 #else
 #  include "socket.cpp"
 #  define RLBOX_IPC_CLASS        rlbox_ipc_socket_sandbox
@@ -81,7 +89,7 @@ private:
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
-#ifdef IPC_TRANSPORT_FUTEX
+#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN)
   ipc_control* ctrl = nullptr;
 #else
   int server_fd = -1;
@@ -169,6 +177,56 @@ private:
     uint64_t raw = ctrl->result;
     memcpy(&result, &raw, sizeof(result));
     futex_store(&ctrl->status, FUTEX_IDLE, std::memory_order_relaxed);
+    return result;
+  }
+
+#elif defined(IPC_TRANSPORT_SPIN)
+
+  template<typename... Args>
+  void do_ipc_void(uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
+    uint8_t n = 0;
+    ([&]{ uint64_t v = 0; memcpy(&v, &args, sizeof(args)); ctrl->args[n++] = v; }(), ...);
+    ctrl->cmd = cmd;
+    spin_store(&ctrl->status, SPIN_REQUEST, std::memory_order_release);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
+    spin_wait(&ctrl->status, SPIN_RESPONSE);
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
+    spin_store(&ctrl->status, SPIN_IDLE, std::memory_order_relaxed);
+  }
+
+  template<typename RetT, typename... Args>
+  RetT do_ipc_ret(uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
+    uint8_t n = 0;
+    ([&]{ uint64_t v = 0; memcpy(&v, &args, sizeof(args)); ctrl->args[n++] = v; }(), ...);
+    ctrl->cmd = cmd;
+    spin_store(&ctrl->status, SPIN_REQUEST, std::memory_order_release);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
+    spin_wait(&ctrl->status, SPIN_RESPONSE);
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
+    RetT result;
+    uint64_t raw = ctrl->result;
+    memcpy(&result, &raw, sizeof(result));
+    spin_store(&ctrl->status, SPIN_IDLE, std::memory_order_relaxed);
     return result;
   }
 
@@ -295,6 +353,10 @@ public:
 protected:
   inline void impl_create_sandbox()
   {
+#ifdef IPC_TRANSPORT_SPIN
+    cpu_pin(0);  // client must be on a dedicated core before the server starts spinning
+#endif
+
     server_pid = fork();
     if (server_pid < 0) { perror("fork"); abort(); }
     if (server_pid == 0) {
@@ -305,7 +367,7 @@ protected:
 
     usleep(100000); // 100ms for server startup
 
-#ifdef IPC_TRANSPORT_FUTEX
+#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN)
     shared_heap = shared_memory_setup(shm_fd, shm_ptr, false, IPC_CONTROL_SIZE);
     ctrl = (ipc_control*)shm_ptr;
 #else
@@ -317,12 +379,15 @@ protected:
   inline void impl_destroy_sandbox()
   {
 #ifdef IPC_TRANSPORT_FUTEX
-    uint8_t n = 0;
     ctrl->cmd = IPC_TERMINATE;
     futex_store(&ctrl->status, FUTEX_REQUEST, std::memory_order_release);
     futex_wake(&ctrl->status);
     while (futex_load(&ctrl->status, std::memory_order_acquire) != FUTEX_RESPONSE)
         futex_wait(&ctrl->status, FUTEX_REQUEST);
+#elif defined(IPC_TRANSPORT_SPIN)
+    ctrl->cmd = IPC_TERMINATE;
+    spin_store(&ctrl->status, SPIN_REQUEST, std::memory_order_release);
+    spin_wait(&ctrl->status, SPIN_RESPONSE);
 #else
     uint32_t cmd = IPC_TERMINATE;
     socket_send(server_fd, (unsigned char*)&cmd, sizeof(cmd));
@@ -395,6 +460,9 @@ protected:
 
 #define rlbox_ipc_futex_sandbox_lookup_symbol(func_name) \
   reinterpret_cast<void*>(&rlbox::rlbox_ipc_futex_sandbox::ipc_##func_name)
+
+#define rlbox_ipc_spin_sandbox_lookup_symbol(func_name) \
+  reinterpret_cast<void*>(&rlbox::rlbox_ipc_spin_sandbox::ipc_##func_name)
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
