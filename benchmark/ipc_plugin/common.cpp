@@ -4,6 +4,17 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sched.h>
+
+#define IPC_CLIENT_CPU 0
+#define IPC_SERVER_CPU 1
+
+static inline void cpu_pin(int core) {
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(core, &set);
+    sched_setaffinity(0, sizeof(set), &set);
+}
 
 #define SHARED_MEM_NAME "/libjpeg_shm"
 #define SHARED_MEM_BASE 0x700000000000UL

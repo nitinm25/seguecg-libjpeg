@@ -34,9 +34,3 @@ static inline void spin_wait(spin_atomic_u32* addr, uint32_t until) {
         __builtin_ia32_pause();
 }
 
-static inline void cpu_pin(int core) {
-    cpu_set_t set;
-    CPU_ZERO(&set);
-    CPU_SET(core, &set);
-    sched_setaffinity(0, sizeof(set), &set);
-}

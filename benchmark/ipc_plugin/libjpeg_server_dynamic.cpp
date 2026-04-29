@@ -1,5 +1,5 @@
 #include "common.cpp"
-#include "spin_transport.h"
+#include "dynamic_transport.h"
 #include "jpeglib.h"
 
 #ifdef IPC_INSTRUMENT
@@ -7,7 +7,7 @@ static uint64_t server_work_ns = 0;
 static uint64_t server_call_count = 0;
 #endif
 
-static mspace     shared_heap        = nullptr;
+static mspace         shared_heap        = nullptr;
 static unsigned char** compress_outbuffer = nullptr;
 static unsigned long*  compress_outsize   = nullptr;
 static unsigned char*  local_compress_buf  = nullptr;
@@ -15,7 +15,15 @@ static unsigned long   local_compress_size = 0;
 
 static void server_run(ipc_control* ctrl) {
     while (true) {
-        spin_wait(&ctrl->status, SPIN_REQUEST);
+        bool diff_core = ((uint32_t)sched_getcpu() != ctrl->client_cpu);
+
+        if (diff_core) {
+            while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_REQUEST)
+                dyn_spin_pause();
+        } else {
+            while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_REQUEST)
+                dyn_futex_wait(&ctrl->status, DYN_IDLE);
+        }
 
         uint32_t cmd = ctrl->cmd;
 
@@ -105,7 +113,7 @@ static void server_run(ipc_control* ctrl) {
                 break;
             }
             case IPC_JPEG_START_COMPRESS: {
-                j_compress_ptr cinfo           = (j_compress_ptr)ctrl->args[0];
+                j_compress_ptr cinfo            = (j_compress_ptr)ctrl->args[0];
                 boolean        write_all_tables = (boolean)ctrl->args[1];
                 jpeg_start_compress(cinfo, write_all_tables);
                 ctrl->result = 1;
@@ -141,7 +149,8 @@ static void server_run(ipc_control* ctrl) {
                 printf("server_calls\t%llu\n",      (unsigned long long)server_call_count);
                 printf("server_work_total\t%llu\n", (unsigned long long)server_work_ns);
 #endif
-                spin_store(&ctrl->status, SPIN_RESPONSE, std::memory_order_release);
+                dyn_store(&ctrl->status, DYN_RESPONSE, std::memory_order_release);
+                dyn_futex_wake(&ctrl->status);
                 return;
             }
         }
@@ -151,7 +160,10 @@ static void server_run(ipc_control* ctrl) {
         server_call_count++;
 #endif
 
-        spin_store(&ctrl->status, SPIN_RESPONSE, std::memory_order_release);
+        // Always futex_wake: client may be futex_waiting (same-core case) or spinning
+        // (different-core case). futex_wake is a no-op when nobody is blocked.
+        dyn_store(&ctrl->status, DYN_RESPONSE, std::memory_order_release);
+        dyn_futex_wake(&ctrl->status);
     }
 }
 
@@ -163,7 +175,8 @@ int main() {
     shared_heap = shared_memory_setup(shm_fd, shm_ptr, true, IPC_CONTROL_SIZE);
 
     ipc_control* ctrl = (ipc_control*)shm_ptr;
-    spin_store(&ctrl->status, SPIN_IDLE, std::memory_order_relaxed);
+    ctrl->server_cpu = (uint32_t)sched_getcpu();
+    dyn_store(&ctrl->status, DYN_IDLE, std::memory_order_relaxed);
 
     server_run(ctrl);
 

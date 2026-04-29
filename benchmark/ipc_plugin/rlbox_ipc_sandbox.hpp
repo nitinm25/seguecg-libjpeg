@@ -26,6 +26,14 @@
 #  define RLBOX_IPC_STATIC_VARS  RLBOX_IPC_SPIN_SANDBOX_STATIC_VARIABLES
 #  define RLBOX_IPC_LOOKUP       rlbox_ipc_spin_sandbox_lookup_symbol
 #  define RLBOX_IPC_SERVER_PATH  "../build_nosimd_release/image_change_quality_ipc_spin_server"
+#elif defined(IPC_TRANSPORT_DYNAMIC)
+#  include "dynamic_transport.h"
+#  define RLBOX_IPC_CLASS        rlbox_ipc_dynamic_sandbox
+#  define RLBOX_IPC_THREAD_DATA  rlbox_ipc_dynamic_sandbox_thread_data
+#  define RLBOX_IPC_GET_TD       get_rlbox_ipc_dynamic_sandbox_thread_data
+#  define RLBOX_IPC_STATIC_VARS  RLBOX_IPC_DYNAMIC_SANDBOX_STATIC_VARIABLES
+#  define RLBOX_IPC_LOOKUP       rlbox_ipc_dynamic_sandbox_lookup_symbol
+#  define RLBOX_IPC_SERVER_PATH  "../build_nosimd_release/image_change_quality_ipc_dynamic_server"
 #else
 #  include "socket.cpp"
 #  define RLBOX_IPC_CLASS        rlbox_ipc_socket_sandbox
@@ -89,7 +97,7 @@ private:
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
-#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN)
+#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN) || defined(IPC_TRANSPORT_DYNAMIC)
   ipc_control* ctrl = nullptr;
 #else
   int server_fd = -1;
@@ -230,6 +238,72 @@ private:
     return result;
   }
 
+#elif defined(IPC_TRANSPORT_DYNAMIC)
+
+  template<typename... Args>
+  void do_ipc_void(uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
+    uint8_t n = 0;
+    ([&]{ uint64_t v = 0; memcpy(&v, &args, sizeof(args)); ctrl->args[n++] = v; }(), ...);
+    ctrl->cmd = cmd;
+    bool diff_core = ((uint32_t)sched_getcpu() != ctrl->server_cpu);
+    dyn_store(&ctrl->status, DYN_REQUEST, std::memory_order_release);
+    dyn_futex_wake(&ctrl->status);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
+    if (diff_core) {
+        while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_RESPONSE)
+            dyn_spin_pause();
+    } else {
+        while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_RESPONSE)
+            dyn_futex_wait(&ctrl->status, DYN_REQUEST);
+    }
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
+    dyn_store(&ctrl->status, DYN_IDLE, std::memory_order_relaxed);
+  }
+
+  template<typename RetT, typename... Args>
+  RetT do_ipc_ret(uint32_t cmd, const Args&... args) {
+#ifdef IPC_INSTRUMENT
+    uint64_t t0 = now_ns();
+#endif
+    uint8_t n = 0;
+    ([&]{ uint64_t v = 0; memcpy(&v, &args, sizeof(args)); ctrl->args[n++] = v; }(), ...);
+    ctrl->cmd = cmd;
+    bool diff_core = ((uint32_t)sched_getcpu() != ctrl->server_cpu);
+    dyn_store(&ctrl->status, DYN_REQUEST, std::memory_order_release);
+    dyn_futex_wake(&ctrl->status);
+#ifdef IPC_INSTRUMENT
+    uint64_t t1 = now_ns();
+#endif
+    if (diff_core) {
+        while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_RESPONSE)
+            dyn_spin_pause();
+    } else {
+        while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_RESPONSE)
+            dyn_futex_wait(&ctrl->status, DYN_REQUEST);
+    }
+#ifdef IPC_INSTRUMENT
+    uint64_t t2 = now_ns();
+    timing.send_ns += t1 - t0;
+    timing.wait_ns += t2 - t1;
+    timing.call_count++;
+#endif
+    RetT result;
+    uint64_t raw = ctrl->result;
+    memcpy(&result, &raw, sizeof(result));
+    dyn_store(&ctrl->status, DYN_IDLE, std::memory_order_relaxed);
+    return result;
+  }
+
 #else // socket transport
 
   template<typename... Args>
@@ -353,9 +427,7 @@ public:
 protected:
   inline void impl_create_sandbox()
   {
-#ifdef IPC_TRANSPORT_SPIN
-    cpu_pin(0);  // client must be on a dedicated core before the server starts spinning
-#endif
+    cpu_pin(IPC_CLIENT_CPU);
 
     server_pid = fork();
     if (server_pid < 0) { perror("fork"); abort(); }
@@ -367,9 +439,12 @@ protected:
 
     usleep(100000); // 100ms for server startup
 
-#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN)
+#if defined(IPC_TRANSPORT_FUTEX) || defined(IPC_TRANSPORT_SPIN) || defined(IPC_TRANSPORT_DYNAMIC)
     shared_heap = shared_memory_setup(shm_fd, shm_ptr, false, IPC_CONTROL_SIZE);
     ctrl = (ipc_control*)shm_ptr;
+#  ifdef IPC_TRANSPORT_DYNAMIC
+    ctrl->client_cpu = (uint32_t)sched_getcpu();
+#  endif
 #else
     shared_heap = shared_memory_setup(shm_fd, shm_ptr, false);
     server_fd = socket_setup_client();
@@ -388,6 +463,12 @@ protected:
     ctrl->cmd = IPC_TERMINATE;
     spin_store(&ctrl->status, SPIN_REQUEST, std::memory_order_release);
     spin_wait(&ctrl->status, SPIN_RESPONSE);
+#elif defined(IPC_TRANSPORT_DYNAMIC)
+    ctrl->cmd = IPC_TERMINATE;
+    dyn_store(&ctrl->status, DYN_REQUEST, std::memory_order_release);
+    dyn_futex_wake(&ctrl->status);
+    while (dyn_load(&ctrl->status, std::memory_order_acquire) != DYN_RESPONSE)
+        dyn_futex_wait(&ctrl->status, DYN_REQUEST);
 #else
     uint32_t cmd = IPC_TERMINATE;
     socket_send(server_fd, (unsigned char*)&cmd, sizeof(cmd));
@@ -463,6 +544,9 @@ protected:
 
 #define rlbox_ipc_spin_sandbox_lookup_symbol(func_name) \
   reinterpret_cast<void*>(&rlbox::rlbox_ipc_spin_sandbox::ipc_##func_name)
+
+#define rlbox_ipc_dynamic_sandbox_lookup_symbol(func_name) \
+  reinterpret_cast<void*>(&rlbox::rlbox_ipc_dynamic_sandbox::ipc_##func_name)
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)

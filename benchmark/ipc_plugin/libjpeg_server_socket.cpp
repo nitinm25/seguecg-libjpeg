@@ -360,6 +360,7 @@ void server_run(int client_fd) {
 }
 
 int main() {
+    cpu_pin(IPC_SERVER_CPU);
     int server_fd = socket_setup_server();
 
     int shm_fd;

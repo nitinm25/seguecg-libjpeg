@@ -409,6 +409,22 @@ $(WASM2C_SRC_PATH)/build_$(BUILD_TYPE_DIR)/wasm2c: $(WASM2C_SRC_PATH)/src/templa
 	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_spin_server_instrument"' \
 	  -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
 
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server: ipc_plugin/libjpeg_server_dynamic.cpp ipc_plugin/dynamic_transport.h ipc_plugin/common.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
+
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_dynamic: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -o $@ $< -DRLBOX_IPC_DYNAMIC \
+	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server"' \
+	  $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
+
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server_instrument: ipc_plugin/libjpeg_server_dynamic.cpp ipc_plugin/dynamic_transport.h ipc_plugin/common.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -DIPC_INSTRUMENT -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(LIBJPEG_NOSIMD_LINK)
+
+../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_ipc_dynamic_instrument: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_$(BUILD_TYPE_DIR)/libjpeg.a ../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server_instrument
+	$(CXX) $(BUILD_TYPE_FLAGS) $(BUILD_BINARY_FLAGS) -DRLBOX_IPC_DYNAMIC -DIPC_INSTRUMENT \
+	  -DIPC_SERVER_PATH='"../build_nosimd_$(BUILD_TYPE_DIR)/image_change_quality_ipc_dynamic_server_instrument"' \
+	  -o $@ $< $(LIBJPEG_NOSIMD_INCLUDES) $(RLBOX_INCLUDES) $(LIBJPEG_NOSIMD_LINK) $(RLBOX_LINK)
+
 ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/image_change_quality_rlbox_wasm2c: image_change_quality_rlbox.cpp test_bytes.h ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/libjpeg.wasm.c
 	rm -rf ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
 	mkdir -p ../build_nosimd_wasm_$(BUILD_TYPE_DIR)/objs
@@ -539,6 +555,8 @@ build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_fute
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_futex_instrument
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_spin
 build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_spin_instrument
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_dynamic
+build_ipc_benchmark: ../build_nosimd_release/image_change_quality_rlbox_ipc_dynamic_instrument
 
 test_rlbox:
 	cd $(REPO_PATH)/build_$(BUILD_TYPE_DIR) && echo -n "Stock " && ./image_change_quality_rlbox_noop

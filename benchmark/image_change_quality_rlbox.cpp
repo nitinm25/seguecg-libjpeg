@@ -39,6 +39,13 @@ RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_futex)
 #include "ipc_plugin/rlbox_ipc_sandbox.hpp"
 RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_spin)
 
+#elif defined(RLBOX_IPC_DYNAMIC)
+
+#define IPC_TRANSPORT_DYNAMIC
+#define RLBOX_USE_STATIC_CALLS() rlbox_ipc_dynamic_sandbox_lookup_symbol
+#include "ipc_plugin/rlbox_ipc_sandbox.hpp"
+RLBOX_DEFINE_BASE_TYPES_FOR(jpeg, ipc_dynamic)
+
 #else
 
 #define RLBOX_USE_STATIC_CALLS() rlbox_noop_sandbox_lookup_symbol
@@ -376,6 +383,8 @@ int main(int argc, char** argv) {
     auto& t = rlbox::rlbox_ipc_futex_sandbox::timing;
 #elif defined(RLBOX_IPC_SPIN)
     auto& t = rlbox::rlbox_ipc_spin_sandbox::timing;
+#elif defined(RLBOX_IPC_DYNAMIC)
+    auto& t = rlbox::rlbox_ipc_dynamic_sandbox::timing;
 #endif
     printf("calls_per_iter\t%llu\n", (unsigned long long)(t.call_count / test_iterations));
     printf("send_per_iter\t%llu\n",  (unsigned long long)(t.send_ns / test_iterations));

@@ -161,6 +161,7 @@ static void server_run(ipc_control* ctrl) {
 }
 
 int main() {
+    cpu_pin(IPC_SERVER_CPU);
     int   shm_fd;
     void* shm_ptr;
     shared_heap = shared_memory_setup(shm_fd, shm_ptr, true, IPC_CONTROL_SIZE);
