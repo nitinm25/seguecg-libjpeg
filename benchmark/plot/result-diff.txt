@@ -1,0 +1,76 @@
+rm -f test_out.jpeg
+rm -f test_bytes.h
+rm -rf ../build_*/
+rm -rf /home/cc/seguecg-libjpeg/benchmark//../../seguecg-wasm2c/build_*
+[basic_nosimd]:
+JPEG recoding time: 50939789
+JPEG recoding time: 51237403
+JPEG recoding time: 50954981
+JPEG recoding time: 51055394
+JPEG recoding time: 50984899
+JPEG recoding time: 51016280
+JPEG recoding time: 51255026
+JPEG recoding time: 51000609
+JPEG recoding time: 51182907
+JPEG recoding time: 50958400
+
+[rlbox_wasm2c]:
+JPEG recoding time: 110572690
+JPEG recoding time: 110320025
+JPEG recoding time: 110791702
+JPEG recoding time: 110655366
+JPEG recoding time: 110282993
+JPEG recoding time: 112524682
+JPEG recoding time: 110805057
+JPEG recoding time: 110460977
+JPEG recoding time: 114287228
+JPEG recoding time: 110536527
+
+[rlbox_ipc_socket]:
+JPEG recoding time: 149697691
+JPEG recoding time: 155117728
+JPEG recoding time: 152753631
+JPEG recoding time: 140595216
+JPEG recoding time: 153613253
+JPEG recoding time: 156227928
+JPEG recoding time: 136831273
+JPEG recoding time: 150081628
+JPEG recoding time: 152378913
+JPEG recoding time: 152683627
+
+[rlbox_ipc_futex]:
+JPEG recoding time: 90852542
+JPEG recoding time: 91121781
+JPEG recoding time: 90892665
+JPEG recoding time: 88532254
+JPEG recoding time: 90886925
+JPEG recoding time: 92901631
+JPEG recoding time: 91040666
+JPEG recoding time: 89593686
+JPEG recoding time: 89636868
+JPEG recoding time: 88584340
+
+[rlbox_ipc_spin]:
+JPEG recoding time: 54674352
+JPEG recoding time: 54659629
+JPEG recoding time: 54346564
+JPEG recoding time: 54431921
+JPEG recoding time: 54249782
+JPEG recoding time: 54924903
+JPEG recoding time: 54192097
+JPEG recoding time: 54235525
+JPEG recoding time: 54112254
+JPEG recoding time: 54677571
+
+[rlbox_ipc_dynamic]:
+JPEG recoding time: 54065874
+JPEG recoding time: 54221078
+JPEG recoding time: 54393166
+JPEG recoding time: 54533016
+JPEG recoding time: 54486233
+JPEG recoding time: 54165617
+JPEG recoding time: 54533374
+JPEG recoding time: 54525893
+JPEG recoding time: 54201352
+JPEG recoding time: 54365842
+

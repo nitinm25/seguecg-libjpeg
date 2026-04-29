@@ -21,13 +21,13 @@ typedef _Atomic uint32_t dyn_atomic_u32;
 #define DYN_REQUEST  1
 #define DYN_RESPONSE 2
 
-#define IPC_CONTROL_SIZE 128  // two cache lines; heap starts after this offset
+#define IPC_CONTROL_SIZE 128
 
 struct alignas(64) ipc_control {
     dyn_atomic_u32 status;
     uint32_t       cmd;
-    uint32_t       server_cpu;  // written by server at startup
-    uint32_t       client_cpu;  // written by client at sandbox creation
+    uint32_t       server_cpu;
+    uint32_t       client_cpu;
     uint64_t       args[8];
     uint64_t       result;
     // 4+4+4+4+64+8 = 88 bytes

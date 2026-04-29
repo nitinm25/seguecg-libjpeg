@@ -1,0 +1,67 @@
+rm -f test_out.jpeg
+rm -f test_bytes.h
+rm -rf ../build_*/
+rm -rf /home/cc/seguecg-libjpeg/benchmark//../../seguecg-wasm2c/build_*
+[basic_nosimd]:
+JPEG recoding time: 50972673
+JPEG recoding time: 50929150
+JPEG recoding time: 50978170
+JPEG recoding time: 50978440
+JPEG recoding time: 50919050
+JPEG recoding time: 50939994
+JPEG recoding time: 50939647
+JPEG recoding time: 50970503
+JPEG recoding time: 50986931
+JPEG recoding time: 50955243
+
+[rlbox_wasm2c]:
+JPEG recoding time: 110295262
+JPEG recoding time: 110519230
+JPEG recoding time: 110400770
+JPEG recoding time: 110352709
+JPEG recoding time: 110255652
+JPEG recoding time: 110487831
+JPEG recoding time: 110524579
+JPEG recoding time: 110481752
+JPEG recoding time: 110586534
+JPEG recoding time: 110462227
+
+[rlbox_ipc_socket]:
+JPEG recoding time: 93800170
+JPEG recoding time: 91382055
+JPEG recoding time: 90560266
+JPEG recoding time: 90992036
+JPEG recoding time: 91130421
+JPEG recoding time: 91372582
+JPEG recoding time: 90800654
+JPEG recoding time: 91295178
+JPEG recoding time: 91218529
+JPEG recoding time: 90941486
+
+[rlbox_ipc_futex]:
+JPEG recoding time: 64554976
+JPEG recoding time: 64569590
+JPEG recoding time: 64694857
+JPEG recoding time: 64259256
+JPEG recoding time: 64180353
+JPEG recoding time: 64478356
+JPEG recoding time: 64411975
+JPEG recoding time: 64552047
+JPEG recoding time: 65021289
+JPEG recoding time: 64705745
+
+[rlbox_ipc_spin]:
+
+
+[rlbox_ipc_dynamic]:
+JPEG recoding time: 64747366
+JPEG recoding time: 64521513
+JPEG recoding time: 64573946
+JPEG recoding time: 64466773
+JPEG recoding time: 64522096
+JPEG recoding time: 64478991
+JPEG recoding time: 64615838
+JPEG recoding time: 64484415
+JPEG recoding time: 64537388
+JPEG recoding time: 64530668
+
